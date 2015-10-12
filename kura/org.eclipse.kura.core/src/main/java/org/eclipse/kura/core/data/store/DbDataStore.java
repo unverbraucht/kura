@@ -240,7 +240,7 @@ public class DbDataStore implements DataStore
 		try {			
 			
 			conn = getConnection();
-
+			
 			// store message
 			pstmt = conn.prepareStatement("INSERT INTO ds_messages (topic, qos, retain, createdOn, publishedOn, publishedMessageId, confirmedOn, payload, priority, sessionId, droppedOn) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);");
 			pstmt.setString   (1,  topic);				// topic
