@@ -98,12 +98,8 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
 
         // create the singleton disconnect manager
         if (s_disconnectMamanager == null) {
-            synchronized(s_disconnectMamanager) {
-                if (s_disconnectMamanager == null) {
-                    s_disconnectMamanager = new CloudPublisherDisconnectManager(m_dataService, 
-                                                                                m_options.getAutoConnectQuieceTimeout());
-                }
-            }
+        	s_disconnectMamanager = new CloudPublisherDisconnectManager(m_dataService,
+        			m_options.getAutoConnectQuieceTimeout());
         }
 
         // recreate the CloudClient
@@ -232,10 +228,15 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
     
     private void setupSubscriptions()
     {
-        m_dataEventSupport.unsubscribeAll();
-        for (String emitterId : m_options.getSubscribedEmitters()) {
-            m_dataEventSupport.subscribe(emitterId);
-        }
+    	if(m_dataEventSupport != null){
+	        m_dataEventSupport.unsubscribeAll();
+	        for (String emitterId : m_options.getSubscribedEmitters()) {
+	            m_dataEventSupport.subscribe(emitterId);
+	        }
+    	} else{
+    		//Handle null dataEventSupport. Is that even a possibility?
+    		//Throw exception?
+    	}
     }
     
     private void startPublishing() throws KuraException 

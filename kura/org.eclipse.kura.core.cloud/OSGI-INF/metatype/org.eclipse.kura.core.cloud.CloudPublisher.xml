@@ -13,7 +13,7 @@
 
 -->
 <MetaData xmlns="http://www.osgi.org/xmlns/metatype/v1.2.0" localization="en_us">
-    <OCD id="org.eclipse.kura.cloud.CloudPublisher" 
+    <OCD id="org.eclipse.kura.core.cloud.CloudPublisher" 
          name="CloudPublisher" 
          description="">
 
@@ -101,7 +101,7 @@
         </AD>
     </OCD>
     
-    <Designate pid="org.eclipse.kura.cloud.CloudPublisher">
-        <Object ocdref="org.eclipse.kura.cloud.CloudPublisher"/>
+    <Designate pid="org.eclipse.kura.core.cloud.CloudPublisher">
+        <Object ocdref="org.eclipse.kura.core.cloud.CloudPublisher"/>
     </Designate>
 </MetaData>
