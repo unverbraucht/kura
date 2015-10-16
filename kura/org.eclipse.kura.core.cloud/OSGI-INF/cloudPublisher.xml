@@ -13,18 +13,20 @@
 
 -->
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" 
-               name="org.eclipse.kura.core.cloud.CloudPublisher"
+               name="org.eclipse.kura.core.cloud.publisher.CloudPublisher"
                activate="activate" 
                deactivate="deactivate" 
-               configuration-policy="require" 
+               modified="updated"
                enabled="true" 
                immediate="true" 
-               modified="updated">
-   <implementation class="org.eclipse.kura.core.cloud.CloudPublisher"/>
+               configuration-policy="require"> 
+   <implementation class="org.eclipse.kura.core.cloud.publisher.CloudPublisher"/>
    <service>
-      <provide interface="org.eclipse.kura.core.cloud.CloudPublisher"/>
+      <provide interface="org.eclipse.kura.configuration.ConfigurableComponent"/>
+      <provide interface="org.eclipse.kura.data.DataServiceListener"/>
+      <provide interface="org.eclipse.kura.data.event.DataEventHandler"/>      
    </service>
-   <property name="service.pid" value="org.eclipse.kura.core.cloud.CloudPublisher"/> 	
+   <property name="service.pid" value="org.eclipse.kura.core.cloud.publisher.CloudPublisher"/> 	
    <reference name="DataService" 
               interface="org.eclipse.kura.data.DataService" 
               policy="static" 

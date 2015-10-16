@@ -17,29 +17,28 @@ import org.osgi.service.event.EventHandler;
 
 public class DataEventSupport implements EventHandler
 {
-    private DataEventEmitter m_eventEmitter;
-    private BundleContext    m_bundleContext;
-    private EventAdmin       m_eventAdmin;
+    private DataEventSupporter m_eventSupporter;
+    private BundleContext      m_bundleContext;
+    private EventAdmin         m_eventAdmin;
     @SuppressWarnings("rawtypes")
     private Map<String,ServiceRegistration> m_subscriptions = null;
     
-    @SuppressWarnings({ "rawtypes", "unchecked" })
-    public DataEventSupport(DataEventEmitter eventEmitter)
+    @SuppressWarnings({ "rawtypes" })
+    public DataEventSupport(DataEventSupporter eventSupporter)
     {
         m_subscriptions = new HashMap<String,ServiceRegistration>();
         
-        // save the emitter supporter
-        this.m_eventEmitter = eventEmitter;
-
-        // get bundle instance via the OSGi Framework Util class
-        this.m_bundleContext = FrameworkUtil.getBundle(eventEmitter.getClass()).getBundleContext();
-        ServiceReference ref = this.m_bundleContext.getServiceReference(EventAdmin.class.getName());
-        this.m_eventAdmin = (EventAdmin) this.m_bundleContext.getService(ref);
+        // save the supporter
+        this.m_eventSupporter = eventSupporter;
+        this.m_bundleContext = FrameworkUtil.getBundle(eventSupporter.getClass()).getBundleContext();
     }
     
     public synchronized void emit(DataEvent dataEvent) 
     {
-        m_eventAdmin.sendEvent(dataEvent);
+    	if (m_eventAdmin == null) {
+            getEventAdmin();
+    	}
+    	m_eventAdmin.sendEvent(dataEvent);
     }
     
     @SuppressWarnings({ "unchecked", "rawtypes" })
@@ -85,9 +84,24 @@ public class DataEventSupport implements EventHandler
     public void handleEvent(Event event)
     {
         if (event instanceof DataEvent) {
-            if (m_eventEmitter instanceof DataEventHandler) {
-                ((DataEventHandler) m_eventEmitter).handleDataEvent((DataEvent) event);
+            if (m_eventSupporter instanceof DataEventHandler) {
+                ((DataEventHandler) m_eventSupporter).handleDataEvent((DataEvent) event);
             }
         }
     }
+    
+    
+    // ----------------------------------------------------------------
+    //
+    //   Private methods
+    //
+    // ----------------------------------------------------------------
+
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private void getEventAdmin() 
+	{
+		// get bundle instance via the OSGi Framework Util class
+        ServiceReference ref = m_bundleContext.getServiceReference(EventAdmin.class);
+        this.m_eventAdmin = (EventAdmin) m_bundleContext.getService(ref);
+	}
 }

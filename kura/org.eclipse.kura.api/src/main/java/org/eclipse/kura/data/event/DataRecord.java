@@ -1,5 +1,6 @@
 package org.eclipse.kura.data.event;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
@@ -12,6 +13,12 @@ public class DataRecord
     private Position        position;
     private List<DataField> fields;
     
+    public DataRecord(DataField... dataFields) {
+    	this.timestamp = new Date();
+    	this.position  = null;
+    	this.fields    = Collections.unmodifiableList(Arrays.asList(dataFields));
+    }
+
     public DataRecord(Date timestamp, 
                       List<DataField> fields) {
         this.timestamp = timestamp;

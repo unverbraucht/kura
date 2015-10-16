@@ -9,9 +9,8 @@
  * Contributors:
  *   Eurotech
  */
-package org.eclipse.kura.core.cloud;
+package org.eclipse.kura.core.cloud.publisher;
 
-import java.text.MessageFormat;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -20,7 +19,7 @@ import org.eclipse.kura.data.DataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CloudPublisherDisconnectManager extends TimerTask
+public class CloudPublisherDisconnectManager
 {
     private static final Logger s_logger = LoggerFactory.getLogger(CloudPublisherDisconnectManager.class);
 
@@ -53,7 +52,7 @@ public class CloudPublisherDisconnectManager extends TimerTask
         long remainingDelay = m_nextExecutionTime - System.currentTimeMillis(); 
         long  requiredDelay = (long) minutes * 60 * 1000;
         if (requiredDelay > remainingDelay) {            
-            scheduleNewTimer(remainingDelay);
+            scheduleNewTimer(requiredDelay);
         }
     }
     
@@ -77,39 +76,32 @@ public class CloudPublisherDisconnectManager extends TimerTask
     {
         // cancel existing timer
         if (m_timer != null) {
-            m_timer.cancel();            
+            m_timer.cancel();
         }
         
         // calculate next execution
+        s_logger.info("Scheduling disconnect in {} msec...", delay);
         m_nextExecutionTime = System.currentTimeMillis() + delay;
 
         // start new timer
         m_timer = new Timer(TIMER_NAME);
-        m_timer.schedule(this, new Date(m_nextExecutionTime));
-        
-        s_logger.info(MessageFormat.format("Disconnecting in {} msec...", delay));
-    }
+        m_timer.schedule(new TimerTask() {
 
-    
-    // ----------------------------------------------------------------
-    //
-    //   TimerTask API
-    //
-    // ----------------------------------------------------------------
-
-    @Override
-    public void run() 
-    {
-        // disconnect
-        try {
-            m_dataService.disconnect(m_quieceTimeout);            
-        }
-        catch (Exception e) {
-            s_logger.warn("Error disconnecting", e);
-        }
-        
-        // cleanup
-        m_timer = null;
-        m_nextExecutionTime = 0;
+			@Override
+			public void run() {
+		        // disconnect
+		        try {
+		            m_dataService.disconnect(m_quieceTimeout);            
+		        }
+		        catch (Exception e) {
+		            s_logger.warn("Error disconnecting", e);
+		        }
+		        
+		        // cleanup
+		        m_timer = null;
+		        m_nextExecutionTime = 0;
+			}
+        	
+        }, new Date(m_nextExecutionTime));
     }
 }

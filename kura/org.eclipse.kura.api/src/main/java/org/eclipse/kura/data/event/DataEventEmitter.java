@@ -1,6 +1,6 @@
 package org.eclipse.kura.data.event;
 
-public interface DataEventEmitter 
+public interface DataEventEmitter extends DataEventSupporter
 {
-    public String getId();
+    public String getEmitterId();
 }

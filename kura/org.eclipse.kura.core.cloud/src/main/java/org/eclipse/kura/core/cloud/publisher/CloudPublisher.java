@@ -9,7 +9,7 @@
  * Contributors:
  *   Eurotech
  */
-package org.eclipse.kura.core.cloud;
+package org.eclipse.kura.core.cloud.publisher;
 
 import java.util.List;
 import java.util.Map;
@@ -19,7 +19,8 @@ import org.eclipse.kura.KuraException;
 import org.eclipse.kura.KuraRuntimeException;
 import org.eclipse.kura.cloud.CloudClient;
 import org.eclipse.kura.cloud.CloudService;
-import org.eclipse.kura.core.cloud.CloudPublisherOptions.AutoConnectMode;
+import org.eclipse.kura.configuration.ConfigurableComponent;
+import org.eclipse.kura.core.cloud.publisher.CloudPublisherOptions.AutoConnectMode;
 import org.eclipse.kura.data.DataService;
 import org.eclipse.kura.data.DataServiceListener;
 import org.eclipse.kura.data.event.DataEvent;
@@ -34,7 +35,10 @@ import org.osgi.util.position.Position;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class CloudPublisher implements DataEventHandler, DataServiceListener
+/**
+ * FIXME: Add option to select the format of the message being published: KuraProtoBuf or JSON
+ */
+public class CloudPublisher implements DataEventHandler, DataServiceListener, ConfigurableComponent
 {
     private static final Logger s_logger = LoggerFactory.getLogger(CloudPublisher.class);
 
@@ -92,6 +96,7 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
         //
         // save the bundle context and the properties
         m_ctx = componentContext;
+        m_dataEventSupport = new DataEventSupport(this);
         
         // Update properties
         m_options = new CloudPublisherOptions(properties);
@@ -120,11 +125,14 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
         // Update properties
         m_options = new CloudPublisherOptions(properties);
 
-        // create the singleton disconnect manager
-        
+        // create the singleton disconnect manager        
         synchronized(s_disconnectMamanager) {
             if (s_disconnectMamanager != null) {
-                s_disconnectMamanager.setQuieceTimeout(m_options.getAutoConnectQuieceTimeout());
+                
+            	s_disconnectMamanager.setQuieceTimeout(m_options.getAutoConnectQuieceTimeout());
+                
+            	int minDelay = m_options.getAutoConnectMode().getDisconnectDelay();
+                s_disconnectMamanager.disconnectInMinutes(minDelay);
             }
         }
 
@@ -171,6 +179,7 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
     @Override
     public void handleDataEvent(DataEvent dataEvent) 
     {
+    	s_logger.info("Receiving event {}", dataEvent.getTopic());
         try {
             
             // Open connection if necessary
@@ -214,7 +223,7 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
         closeCloudClient();
         
         // create the new CloudClient for the specified application 
-        String    appId = m_options.getPublishingApplication();        
+        String    appId = m_options.getPublishingApplication();
         m_cloudClient   = m_cloudService.newCloudClient(appId);
     }
 
@@ -231,7 +240,8 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
     	if(m_dataEventSupport != null){
 	        m_dataEventSupport.unsubscribeAll();
 	        for (String emitterId : m_options.getSubscribedEmitters()) {
-	            m_dataEventSupport.subscribe(emitterId);
+	        	s_logger.info("Subscribed to emitter {}", emitterId);	            
+	        	m_dataEventSupport.subscribe(emitterId);
 	        }
     	} else{
     		//Handle null dataEventSupport. Is that even a possibility?
@@ -301,9 +311,6 @@ public class CloudPublisher implements DataEventHandler, DataServiceListener
                 value = dataField.getValue().getValue();
                 break;
             case INTEGER:
-                value = dataField.getValue().getValue();
-                break;
-            case FLOAT:
                 value = dataField.getValue().getValue();
                 break;
             case LONG:

@@ -9,7 +9,7 @@
  * Contributors:
  *   Eurotech
  */
-package org.eclipse.kura.core.cloud;
+package org.eclipse.kura.core.cloud.publisher;
 
 import java.util.Map;
 

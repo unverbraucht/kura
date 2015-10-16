@@ -16,17 +16,19 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DbDataRecordStoreOptions 
+public class DbDataRecordViewOptions 
 {
     @SuppressWarnings("unused")
-	private static final Logger s_logger = LoggerFactory.getLogger(DbDataRecordStoreOptions.class);
+	private static final Logger s_logger = LoggerFactory.getLogger(DbDataRecordViewOptions.class);
             
-    private static final String CONF_EMITTER_ID = "emitter.id";
-    private static final String CONF_EMITTERS   = "data.emitters";
+    private static final String CONF_EMITTER_ID   = "emitter.id";
+    private static final String CONF_EMITTERS     = "data.emitters";
+    private static final String CONF_SQL_VIEW     = "sql.view";
+    private static final String CONF_REFRESH_RATE = "refresh.rate";
     
     private Map<String,Object> m_properties;
     
-    DbDataRecordStoreOptions(Map<String,Object> properties) {
+    DbDataRecordViewOptions(Map<String,Object> properties) {
         m_properties = properties;
     }
     
@@ -59,6 +61,36 @@ public class DbDataRecordStoreOptions
             emitteres = emittersStr.split(",");
         }
         return emitteres;
+    }   
+
+    /**
+     * Returns the SQL to be executed for this view
+     * @return
+     */
+    public String getSqlView() 
+    {
+        String sqlView = null; 
+        if (m_properties != null &&
+            m_properties.get(CONF_SQL_VIEW) != null &&
+            m_properties.get(CONF_SQL_VIEW) instanceof String) {
+        	sqlView = (String) m_properties.get(CONF_SQL_VIEW);
+        }
+        return sqlView;
+    }   
+
+    /**
+     * Returns the rate of refresh for this view.
+     * @return
+     */
+    public int getRefreshRate() 
+    {
+        int refreshRate = 0; 
+        if (m_properties != null &&
+            m_properties.get(CONF_SQL_VIEW) != null &&
+            m_properties.get(CONF_SQL_VIEW) instanceof Integer) {
+        	refreshRate = (Integer) m_properties.get(CONF_REFRESH_RATE);
+        }
+        return refreshRate;
     }   
 }
 

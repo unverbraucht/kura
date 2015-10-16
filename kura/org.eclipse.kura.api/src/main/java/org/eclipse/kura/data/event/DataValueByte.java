@@ -1,18 +1,18 @@
 package org.eclipse.kura.data.event;
 
-public class DataValueByte implements DataValue<byte[]>
+public class DataValueByte implements DataValue<Byte>
 {
-    private byte[] value;
+    private byte value;
     
-    public DataValueByte(byte[] value) {
+    public DataValueByte(byte value) {
         this.value = value;
     }
     
     public DataType getType() {
-        return DataType.RAW;
+        return DataType.BYTE;
     }
 
-    public byte[] getValue() {
+    public Byte getValue() {
         return value;
     }
 }

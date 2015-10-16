@@ -1,5 +1,6 @@
 package org.eclipse.kura.data.event;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -11,6 +12,15 @@ public class DataEvent extends Event
     private String emitterId;
     private List<DataRecord> records = null;
     
+    public DataEvent(String emitterId,
+    				 DataRecord... records)
+    {
+    	super(DataEventTopic.build(emitterId), new HashMap<String,Object>());
+
+    	this.emitterId = emitterId; 
+    	this.records   = Collections.unmodifiableList(Arrays.asList(records));
+    }
+
     public DataEvent(String emitterId,
                      List<DataRecord> records)
     {
