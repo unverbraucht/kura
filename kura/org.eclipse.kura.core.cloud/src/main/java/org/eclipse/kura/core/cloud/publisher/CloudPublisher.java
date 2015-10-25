@@ -36,6 +36,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
+ * FIXME: Extract the CloudPubliher service interface in the API and implement a publish(DataRecord... ) method
  * FIXME: Add option to select the format of the message being published: KuraProtoBuf or JSON
  */
 public class CloudPublisher implements DataEventHandler, DataServiceListener, ConfigurableComponent

@@ -42,13 +42,17 @@ import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DbDataRecordView implements DataEventEmitter, DataEventHandler, ConfigurableComponent
+/**
+ * FIXME: Remove refresh rate parameter and add a new DataEventTimer service
+ * FIXME: Add support for Cloudlet 
+ */
+public class DbDataRecordFilter implements DataEventEmitter, DataEventHandler, ConfigurableComponent
 {
-    private static final Logger s_logger = LoggerFactory.getLogger(DbDataRecordView.class);    
+    private static final Logger s_logger = LoggerFactory.getLogger(DbDataRecordFilter.class);    
     
     @SuppressWarnings("unused")
     private ComponentContext        m_ctx;
-    private DbDataRecordViewOptions m_options;
+    private DbDataRecordFilterOptions m_options;
 
     private DbService               m_dbService;
     private DataEventSupport        m_dataEventSupport;
@@ -87,7 +91,7 @@ public class DbDataRecordView implements DataEventEmitter, DataEventHandler, Con
         m_dataEventSupport = new DataEventSupport(this); 
         		
         // Update properties
-        m_options = new DbDataRecordViewOptions(properties);
+        m_options = new DbDataRecordFilterOptions(properties);
 
         // create the subscriptions
         setupSubscriptions();
@@ -105,7 +109,7 @@ public class DbDataRecordView implements DataEventEmitter, DataEventHandler, Con
         s_logger.info("updated...: " + properties);
 
         // Update properties
-        m_options = new DbDataRecordViewOptions(properties);
+        m_options = new DbDataRecordFilterOptions(properties);
 
         // create the subscriptions
         setupSubscriptions();

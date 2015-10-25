@@ -16,10 +16,10 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DbDataRecordViewOptions 
+public class DbDataRecordFilterOptions 
 {
     @SuppressWarnings("unused")
-	private static final Logger s_logger = LoggerFactory.getLogger(DbDataRecordViewOptions.class);
+	private static final Logger s_logger = LoggerFactory.getLogger(DbDataRecordFilterOptions.class);
             
     private static final String CONF_EMITTER_ID   = "emitter.id";
     private static final String CONF_EMITTERS     = "data.emitters";
@@ -28,7 +28,7 @@ public class DbDataRecordViewOptions
     
     private Map<String,Object> m_properties;
     
-    DbDataRecordViewOptions(Map<String,Object> properties) {
+    DbDataRecordFilterOptions(Map<String,Object> properties) {
         m_properties = properties;
     }
     

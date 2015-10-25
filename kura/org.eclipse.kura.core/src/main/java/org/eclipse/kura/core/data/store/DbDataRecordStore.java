@@ -48,11 +48,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * FIXME: Add index on timestamp
+ * FIXME: Extract the DataRecordStore service interface in the API and implement a store and query method
+ * FIXME: Add primary key and index on timestamp
  * FIXME: Verify timestamp resolution to milliseconds
  * FIXME: Add support for period cleanup of the data records collected!
  * FIXME: Add support for different table type - persisted vs in-memory.
  * FIXME: SQL escaping of the names of the tables and columns. Be careful on the capitalization; it is lossy?
+ * FIXME: Add support for Cloudlet
  */
 public class DbDataRecordStore implements DataEventEmitter, DataEventHandler, ConfigurableComponent
 {
@@ -113,7 +115,7 @@ public class DbDataRecordStore implements DataEventEmitter, DataEventHandler, Co
         // create the subscriptions
         setupSubscriptions();
         
-        // test table
+        // FIXME: remove test table create and insert        
         try {
 			
 			List<DataField> fields = new ArrayList<DataField>();

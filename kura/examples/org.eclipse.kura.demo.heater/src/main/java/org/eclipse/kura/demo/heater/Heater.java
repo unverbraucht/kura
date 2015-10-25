@@ -26,6 +26,7 @@ import org.eclipse.kura.data.event.DataField;
 import org.eclipse.kura.data.event.DataRecord;
 import org.eclipse.kura.data.event.DataValueDouble;
 import org.eclipse.kura.data.event.DataValueInteger;
+import org.eclipse.kura.data.event.DataValueString;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentException;
 import org.slf4j.Logger;
@@ -194,7 +195,9 @@ public class Heater implements ConfigurableComponent, DataEventEmitter
 		}
 
 		DataRecord dataRecord = new DataRecord(new DataField("temperatureInternal", new DataValueDouble(m_temperature)),
-											   new DataField("randomInt", new DataValueInteger((new Random()).nextInt())));
+											   new DataField("randomInt", new DataValueInteger((new Random()).nextInt())),
+											   new DataField("name", 	  new DataValueString("aaa"+(new Random()).nextInt())),
+										       new DataField("randomInt2", new DataValueInteger((new Random()).nextInt())));
 		DataEvent   dataEvent = new DataEvent(getEmitterId(), dataRecord);
 
     	s_logger.info("Emitting event {} with temperatureInternal {}...", dataEvent.getTopic(), m_temperature);
