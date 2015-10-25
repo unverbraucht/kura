@@ -32,7 +32,7 @@
         	type="String"
         	cardinality="0"
         	required="true"
-        	default="aa"
+        	default=""
         	description="Coma-separated list of DataEmitter's IDs this DbDataRecordStore will subscribe to">
         </AD>
     </OCD>

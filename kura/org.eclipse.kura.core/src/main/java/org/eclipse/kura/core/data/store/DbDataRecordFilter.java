@@ -101,7 +101,7 @@ public class DbDataRecordFilter implements DataEventEmitter, DataEventHandler, C
 		} catch (SQLException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}        
     }
 
     public void updated(Map<String,Object> properties)

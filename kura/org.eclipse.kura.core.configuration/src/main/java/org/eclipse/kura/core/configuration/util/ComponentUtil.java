@@ -14,6 +14,7 @@ package org.eclipse.kura.core.configuration.util;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -23,6 +24,7 @@ import javax.xml.stream.XMLStreamException;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.metatype.AD;
+import org.eclipse.kura.configuration.metatype.Designate;
 import org.eclipse.kura.configuration.metatype.MetaData;
 import org.eclipse.kura.configuration.metatype.OCD;
 import org.eclipse.kura.configuration.metatype.Scalar;
@@ -49,6 +51,74 @@ import org.slf4j.LoggerFactory;
 public class ComponentUtil 
 {
 	private static final Logger s_logger = LoggerFactory.getLogger(ComponentUtil.class);
+
+	/**
+	 * Returns a Map with all the MetaType Object Class Definitions contained in the bundle.
+	 * 
+	 * @param ctx
+	 * @param bnd
+	 * @return
+	 */
+	public static Map<String,Tmetadata> getMetadata(BundleContext ctx, Bundle bnd)
+	{
+		Map<String,Tmetadata> bundleMetadata = new HashMap<String,Tmetadata>();
+
+		ServiceReference<MetaTypeService> ref = ctx.getServiceReference(MetaTypeService.class);
+		MetaTypeService metaTypeService = ctx.getService(ref);
+		MetaTypeInformation mti = metaTypeService.getMetaTypeInformation(bnd);
+		if (mti != null) {
+
+			List<String> pids = new ArrayList<String>();
+			pids.addAll(Arrays.asList(mti.getPids()));
+			pids.addAll(Arrays.asList(mti.getFactoryPids()));
+			if (pids != null) {				
+				for (String pid : pids) {
+					
+					Tmetadata metadata = null;
+					try {
+						metadata =  readMetadata(bnd, pid);
+						if (metadata != null) {
+							bundleMetadata.put(pid, metadata);
+						}
+					}
+					catch (Exception e) {
+						// ignore: Metadata for the specified pid is not found
+						s_logger.warn("Error loading Metadata for pid "+pid, e);
+					}
+				}
+			}
+		}
+		return bundleMetadata;
+	}
+	
+	/**
+	 * Returns the Designate for the given pid
+	 */
+	public static Designate getDesignate(Tmetadata metadata, String pid) 
+	{
+		List<Designate> designates = metadata.getDesignate();
+		for (Designate designate : designates) {
+			if (designate.getPid().equals(pid)) {
+				return designate; 
+			}
+		}
+		return null;
+	}
+
+	/**
+	 * Returns the Designate for the given pid
+	 */
+	public static OCD getOCD(Tmetadata metadata, String pid) 
+	{
+		if (metadata.getOCD() != null && metadata.getOCD().size() > 0) {
+			for (OCD ocd : metadata.getOCD()) {
+				if (ocd.getId() != null && ocd.getId().equals(pid)) {
+					return ocd;
+				}
+			}
+		}
+		return null;				
+	}
 
 	/**
 	 * Returns a Map with all the MetaType Object Class Definitions contained in the bundle.
@@ -187,6 +257,35 @@ public class ComponentUtil
 
 
 	/**
+	 * Returned the Tmetadata as parsed from the XML file.
+	 * The returned Tmetadata is just an object representation of the Metadata
+	 * element contained in the XML MetaData file and it does not 
+	 * contain any extra post-processing of the loaded information.  
+	 * 
+	 * @param ctx
+	 * @param pid ID of the service whose OCD should be loaded
+	 * @return
+	 * @throws IOException
+	 * @throws JAXBException
+	 * @throws XMLStreamException
+	 * @throws FactoryConfigurationError
+	 */
+	public static Tmetadata readMetadata(Bundle bundle, String pid)
+		throws IOException, Exception, XMLStreamException, FactoryConfigurationError
+	{
+		Tmetadata metaData = null;
+		StringBuilder sbMetatypeXmlName = new StringBuilder();
+		sbMetatypeXmlName.append("OSGI-INF/metatype/").append(pid).append(".xml");
+
+		String metatypeXmlName = sbMetatypeXmlName.toString();
+		String metatypeXml = IOUtil.readResource(bundle, metatypeXmlName);		
+		if (metatypeXml != null) {
+			metaData = XmlUtil.unmarshal(metatypeXml, Tmetadata.class);	
+		}
+		return metaData;				
+	}
+
+	/**
 	 * Returned the ObjectClassDefinition as parsed from the XML file.
 	 * The returned OCD is just an object representation of the OCD
 	 * element contained in the XML MetaData file and it does not 
@@ -202,26 +301,19 @@ public class ComponentUtil
 	 */
 	public static Tocd readObjectClassDefinition(Bundle bundle, String pid)
 		throws IOException, Exception, XMLStreamException, FactoryConfigurationError
-	{
+	{		
 		Tocd ocd = null;
-		StringBuilder sbMetatypeXmlName = new StringBuilder();
-		sbMetatypeXmlName.append("OSGI-INF/metatype/").append(pid).append(".xml");
-
-		String metatypeXmlName = sbMetatypeXmlName.toString();
-		String metatypeXml = IOUtil.readResource(bundle, metatypeXmlName);		
-		if (metatypeXml != null) {
-			Tmetadata metaData = XmlUtil.unmarshal(metatypeXml, Tmetadata.class);	
-			if (metaData.getOCD() != null && metaData.getOCD().size() > 0) {
-				ocd = (Tocd) metaData.getOCD().get(0);
-			}
+		Tmetadata metaData = readMetadata(bundle, pid);
+		if (metaData.getOCD() != null && metaData.getOCD().size() > 0) {
+			ocd = (Tocd) metaData.getOCD().get(0);
 		}
 		return ocd;				
 	}
 
 
 	public static Map<String,Object> getDefaultProperties(OCD ocd, ComponentContext ctx)
-			throws KuraException
-			{
+		throws KuraException
+	{
 		//
 		// reconcile by looping through the ocd properties
 		Map<String,Object> defaults = null;
@@ -242,7 +334,7 @@ public class ComponentUtil
 			}
 		}
 		return defaults;
-			}	
+	}
 
 
 	private static Object getDefaultValue(AD attrDef, ComponentContext ctx)

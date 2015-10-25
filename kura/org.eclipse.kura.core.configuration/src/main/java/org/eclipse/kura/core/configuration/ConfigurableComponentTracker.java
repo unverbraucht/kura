@@ -72,7 +72,7 @@ public class ConfigurableComponentTracker extends ServiceTracker
 			ServiceReference[] refs = context.getServiceReferences((String) null, null);
 			if (refs != null) {
 				for (ServiceReference ref : refs) {
-					String pid = (String) ref.getProperty("component.name");
+					String pid = (String) ref.getProperty("service.pid");
 					if (pid != null && !m_confService.hasConfigurableComponent(pid)) {
 
 						Object obj = context.getService(ref);
@@ -81,8 +81,9 @@ public class ConfigurableComponentTracker extends ServiceTracker
 								s_logger.info("Could not find service for: {}", ref);
 							}
 							else if (obj instanceof ConfigurableComponent) {
-								s_logger.info("Adding ConfigurableComponent {}", pid);
-								m_confService.registerComponentConfiguration(ref.getBundle(), pid);
+								String factoryPid = (String) ref.getProperty("service.factoryPid");
+								s_logger.info("Adding ConfigurableComponent {} with factoryPid {}", pid, factoryPid);
+								m_confService.registerComponentConfiguration(ref.getBundle(), pid, factoryPid);
 							}
 							else if (obj instanceof SelfConfiguringComponent) {
 								s_logger.info("Adding SelfConfiguringComponent {}", pid);
@@ -111,13 +112,14 @@ public class ConfigurableComponentTracker extends ServiceTracker
 	{
 		Object service = super.addingService(ref);
 		
-		String pid = (String) ref.getProperty("component.name");
+		String pid = (String) ref.getProperty("service.pid");
 		if (pid != null) {
 
 			if (service instanceof ConfigurableComponent) {
-				s_logger.info("Adding ConfigurableComponent {}", pid);
 				try {
-					m_confService.registerComponentConfiguration(ref.getBundle(), pid);
+					String factoryPid = (String) ref.getProperty("service.factoryPid");
+					s_logger.info("Adding ConfigurableComponent {} with factoryPid {}", pid, factoryPid);					
+					m_confService.registerComponentConfiguration(ref.getBundle(), pid, factoryPid);
 				} 
 				catch (KuraException e) {
 					s_logger.info("Error adding ConfigurableComponent {} {}", pid, e);
@@ -143,7 +145,7 @@ public class ConfigurableComponentTracker extends ServiceTracker
 	{
 		super.removedService(reference, service);
 
-		String pid = (String) reference.getProperty("component.name");
+		String pid = (String) reference.getProperty("service.pid");
 		if (pid != null) {
 			if (service instanceof ConfigurableComponent) {
 				s_logger.info("Removed  ConfigurableComponent {}", pid);

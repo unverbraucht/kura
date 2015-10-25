@@ -66,7 +66,7 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 				if (ocd != null) {
 
 					GwtConfigComponent gwtConfig = new GwtConfigComponent();
-					gwtConfig.setComponentId(ocd.getId());
+					gwtConfig.setComponentId(config.getPid());
 					gwtConfig.setComponentName(ocd.getName());
 					gwtConfig.setComponentDescription(ocd.getDescription());
 					if (ocd.getIcon() != null && ocd.getIcon().size() > 0) {
@@ -164,7 +164,7 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 				if (ocd != null) {
 
 					GwtConfigComponent gwtConfig = new GwtConfigComponent();
-					gwtConfig.setComponentId(ocd.getId());
+					gwtConfig.setComponentId(config.getPid());
 					gwtConfig.setComponentName(ocd.getName());
 					gwtConfig.setComponentDescription(ocd.getDescription());
 					if (ocd.getIcon() != null && ocd.getIcon().size() > 0) {
