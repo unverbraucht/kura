@@ -19,20 +19,20 @@ import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 
 import org.eclipse.kura.configuration.ConfigurableComponent;
-import org.eclipse.kura.data.event.DataEvent;
-import org.eclipse.kura.data.event.DataEventEmitter;
-import org.eclipse.kura.data.event.DataEventSupport;
-import org.eclipse.kura.data.event.DataField;
-import org.eclipse.kura.data.event.DataRecord;
-import org.eclipse.kura.data.event.DataValueDouble;
-import org.eclipse.kura.data.event.DataValueInteger;
-import org.eclipse.kura.data.event.DataValueString;
+import org.eclipse.kura.wire.WireEmitter;
+import org.eclipse.kura.wire.WireField;
+import org.eclipse.kura.wire.WireRecord;
+import org.eclipse.kura.wire.WireSupport;
+import org.eclipse.kura.wire.WireValueDouble;
+import org.eclipse.kura.wire.WireValueInteger;
+import org.eclipse.kura.wire.WireValueString;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentException;
+import org.osgi.service.wireadmin.Wire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class Heater implements ConfigurableComponent, DataEventEmitter  
+public class Heater implements ConfigurableComponent, WireEmitter  
 {	
 	private static final Logger s_logger = LoggerFactory.getLogger(Heater.class);
 	
@@ -47,16 +47,15 @@ public class Heater implements ConfigurableComponent, DataEventEmitter
 	
 	private static final String   TEMP_INITIAL_PROP_NAME   = "temperature.initial";
 	private static final String   TEMP_INCREMENT_PROP_NAME = "temperature.increment";
-
-	private static final String   EMITTER_ID               = "emitter.id";
 	private static final String   PUBLISH_RATE_PROP_NAME   = "sample.rate";
 	
-	private ScheduledExecutorService    m_worker;
-	private ScheduledFuture<?>          m_handle;
+	private ScheduledExecutorService m_worker;
+	private ScheduledFuture<?>       m_handle;
 	
-	private float                       m_temperature;
-	private Map<String, Object>         m_properties;
-	private DataEventSupport            m_dataEventSupport;
+	private ComponentContext         m_ctx;
+	private float                    m_temperature;
+	private Map<String, Object>      m_properties;
+	private WireSupport              m_wireSupport;
 	
 	// ----------------------------------------------------------------
 	//
@@ -80,13 +79,13 @@ public class Heater implements ConfigurableComponent, DataEventEmitter
 	{
 		s_logger.info("Activating Heater...");
 		
+		m_ctx = componentContext;
 		m_properties = properties;
+		m_wireSupport = new WireSupport(this);
+
 		for (String s : properties.keySet()) {
 			s_logger.info("Activate - "+s+": "+properties.get(s));
 		}
-		
-		// get the event support
-		m_dataEventSupport = new DataEventSupport(this);
 		
 		try  {
 			
@@ -127,7 +126,18 @@ public class Heater implements ConfigurableComponent, DataEventEmitter
 		doUpdate(true);
 		s_logger.info("Updated Heater... Done.");
 	}
+
 	
+    // ----------------------------------------------------------------
+    //
+    //   Kura Wire APIs
+    //
+    // ----------------------------------------------------------------
+
+	@Override
+	public String getEmitterPid() {
+		return (String) m_ctx.getProperties().get("service.pid");
+	}
 	
 		
 	// ----------------------------------------------------------------
@@ -194,18 +204,31 @@ public class Heater implements ConfigurableComponent, DataEventEmitter
 			m_temperature -= 4*tempIncr;
 		}
 
-		DataRecord dataRecord = new DataRecord(new DataField("temperatureInternal", new DataValueDouble(m_temperature)),
-											   new DataField("randomInt", new DataValueInteger((new Random()).nextInt())),
-											   new DataField("name", 	  new DataValueString("aaa"+(new Random()).nextInt())),
-										       new DataField("randomInt2", new DataValueInteger((new Random()).nextInt())));
-		DataEvent   dataEvent = new DataEvent(getEmitterId(), dataRecord);
+		WireRecord dataRecord = new WireRecord(new WireField("temperatureInternal", new WireValueDouble(m_temperature)),
+											   new WireField("randomInt", new WireValueInteger((new Random()).nextInt())),
+											   new WireField("name", 	  new WireValueString("aaa"+(new Random()).nextInt())),
+										       new WireField("randomInt2", new WireValueInteger((new Random()).nextInt())));
 
-    	s_logger.info("Emitting event {} with temperatureInternal {}...", dataEvent.getTopic(), m_temperature);
-		m_dataEventSupport.emit(dataEvent);
+    	s_logger.info("Emitting WireRecord with temperatureInternal {}...", m_temperature);
+    	m_wireSupport.emit(dataRecord);
 	}
 
+
+    // ----------------------------------------------------------------
+    //
+    //   Wire APIs
+    //
+    // ----------------------------------------------------------------
+
 	@Override
-	public String getEmitterId() {
-		return (String) m_properties.get(EMITTER_ID);
+	public Object polled(Wire wire) {
+		return m_wireSupport.polled(wire);
+	}
+
+	
+	@Override
+	public void consumersConnected(Wire[] wires) {
+		s_logger.info("Got connected Wires {}"+wires.length);
+		m_wireSupport.consumersConnected(wires);
 	}
 }

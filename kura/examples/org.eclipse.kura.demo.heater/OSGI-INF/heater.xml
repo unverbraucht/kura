@@ -26,5 +26,9 @@
    <property name="service.pid" type="String" value="org.eclipse.kura.demo.heater.Heater"/>
    <service>
        <provide interface="org.eclipse.kura.demo.heater.Heater"/>
+       <provide interface="org.eclipse.kura.configuration.ConfigurableComponent"/>
+       <provide interface="org.eclipse.kura.wire.WireSupporter"/>
+       <provide interface="org.eclipse.kura.wire.WireEmitter"/>      
+       <provide interface="org.osgi.service.wireadmin.Producer"/>
    </service>
 </scr:component>

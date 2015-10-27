@@ -24,7 +24,6 @@ import java.util.Date;
 import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -185,13 +184,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 		m_bundleTracker = new ComponentMetaTypeBundleTracker(m_ctx.getBundleContext(), m_configurationAdmin, this);
 		m_bundleTracker.open();		
-		
-		try {
-			createComponent("org.eclipse.kura.core.cloud.publisher.CloudPublisher", new Hashtable());
-		} catch (KuraException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 
 	protected void deactivate(ComponentContext componentContext) {
@@ -338,9 +330,11 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 			// FIXME: What is the second argument in createFactoryConfiguration?
 			instancePid = m_configurationAdmin.createFactoryConfiguration(factoryPid, null).getPid();
 
-	        // following update() invocations will find existing instance and invoke @Modified 
-			Dictionary dict = CollectionsUtil.mapToDictionary(properties);
-	        m_configurationAdmin.getConfiguration(instancePid).update(dict);
+	        // following update() invocations will find existing instance and invoke @Modified
+			OCD ocd = m_ocds.get(factoryPid);
+			Map<String,Object> props = ComponentUtil.getDefaultProperties(ocd, m_ctx);
+			Dictionary dict = CollectionsUtil.mapToDictionary(props);
+	        m_configurationAdmin.getConfiguration(instancePid, null).update(dict);
 	        
 	        s_logger.info("Created new component instance for factory {} with instance id {}", factoryPid, instancePid);
 		} 

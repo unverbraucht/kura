@@ -61,14 +61,19 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 						config.getPid().endsWith("NetworkConfigurationService")) {
 					continue;
 				}
-
+				
 				OCD ocd = config.getDefinition();
 				if (ocd != null) {
 
 					GwtConfigComponent gwtConfig = new GwtConfigComponent();
 					gwtConfig.setComponentId(config.getPid());
 					gwtConfig.setComponentName(ocd.getName());
-					gwtConfig.setComponentDescription(ocd.getDescription());
+					
+					String description = ocd.getDescription();
+					if (description == null || description.isEmpty()) {
+						description = " ";
+					}
+					gwtConfig.setComponentDescription(description);
 					if (ocd.getIcon() != null && ocd.getIcon().size() > 0) {
 						Icon icon = ocd.getIcon().get(0);
 						gwtConfig.setComponentIcon(icon.getResource());
@@ -81,7 +86,12 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 						GwtConfigParameter gwtParam = new GwtConfigParameter();
 						gwtParam.setId(ad.getId());
 						gwtParam.setName(ad.getName());
-						gwtParam.setDescription(ad.getDescription());
+
+						String adDescription = ad.getDescription();
+						if (adDescription == null || adDescription.isEmpty()) {
+							adDescription = " ";
+						}
+						gwtParam.setDescription(adDescription);
 						gwtParam.setType(GwtConfigParameterType.valueOf(ad.getType().name()));
 						gwtParam.setRequired(ad.isRequired());
 						gwtParam.setCardinality(ad.getCardinality());

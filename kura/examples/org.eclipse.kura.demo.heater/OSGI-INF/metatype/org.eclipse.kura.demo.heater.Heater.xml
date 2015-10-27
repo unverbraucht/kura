@@ -83,20 +83,12 @@
             default="0.25"
             description="Increment value for the temperature metric."/>
 
-        <AD id="emitter.id"  
-            name="emitter.id"
-            type="String"
-            cardinality="0" 
-            required="true"
-            default="heater"
-            description="ID for the events emitted by this emitter."/>
-
         <AD id="sample.rate"  
             name="sample.rate"
             type="Integer"
             cardinality="0" 
             required="true"
-            default="2"
+            default="30"
             min="1" 
             description="Default measurement sampling rate in seconds (min 1)."/>
     </OCD>

@@ -109,11 +109,11 @@ public class ComponentMetaTypeBundleTracker extends BundleTracker<Bundle>
 		// properties in ConfigurationAdmin.
 		// Note: configuration properties in snapshots no longer present in 
 		// the meta-type are not purged.
-
+		
 		Map<String,Tmetadata> metas = ComponentUtil.getMetadata(m_context, bundle); 
 		for (String pid : metas.keySet()) {
 			try {
-
+				
 				// register the OCD for all the contained services
 				Tmetadata  metadata = metas.get(pid);
 				if (metadata != null) {
