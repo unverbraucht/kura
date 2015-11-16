@@ -290,7 +290,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 	@Override
 	public synchronized void updateConfiguration(String pidToUpdate, Map<String, Object> propertiesToUpdate) throws KuraException {
 		List<ComponentConfigurationImpl> configs = new ArrayList<ComponentConfigurationImpl>();
-		ComponentConfigurationImpl cci = new ComponentConfigurationImpl(pidToUpdate, null, propertiesToUpdate);
+		ComponentConfigurationImpl cci = new ComponentConfigurationImpl(pidToUpdate, null, null, propertiesToUpdate);
 		configs.add(cci);
 		updateConfigurations((List<ComponentConfiguration>) (List<?>) configs);	
 	}
@@ -314,7 +314,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		Map<String,Object> props = ComponentUtil.getDefaultProperties(ocd, m_ctx);
 		
 		ComponentConfiguration compConfImpl = null;
-		compConfImpl = new ComponentConfigurationImpl(factoryPid, ocd, props);
+		compConfImpl = new ComponentConfigurationImpl(factoryPid, null, ocd, props);
 		return compConfImpl;
 	}
 
@@ -809,7 +809,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 			Map<String, Object> cleanedProps= cleanProperties(props, pid);
 
-			cc = new ComponentConfigurationImpl(pid, ocd, cleanedProps); 
+			cc = new ComponentConfigurationImpl(pid, cfg.getFactoryPid(), ocd, cleanedProps); 
 		} catch (Exception e) {
 			s_logger.error("Error getting Configuration for component: " + pid + ". Ignoring it.", e);
 		}
@@ -1314,7 +1314,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 						// found a match
 						isConfigToUpdate = true;
 						Map<String, Object> cleanedProps= cleanProperties(configToUpdate.getConfigurationProperties(), pid);
-						ComponentConfiguration cleanedConfig= new ComponentConfigurationImpl(pid, (Tocd) configToUpdate.getDefinition(), cleanedProps);
+						ComponentConfiguration cleanedConfig= new ComponentConfigurationImpl(pid, configToUpdate.getFactoryPid(), (Tocd) configToUpdate.getDefinition(), cleanedProps);
 						configs.add(cleanedConfig);
 						break;
 					}
@@ -1329,7 +1329,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 				}
 				if (cc != null && cc.getPid() != null && cc.getPid().equals(pid)) {
 					props = cc.getConfigurationProperties();
-					cci = new ComponentConfigurationImpl(pid, null, props);
+					cci = new ComponentConfigurationImpl(pid, cc.getFactoryPid(), null, props);
 					configs.add((ComponentConfigurationImpl) cci);
 				}
 			}

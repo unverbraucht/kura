@@ -20,6 +20,8 @@ public class ComponentConfigurationImpl implements ComponentConfiguration
 {
 	protected String pid;
 	
+	protected String factoryPid;
+	
 	protected Tocd definition;
 
 	protected Map<String,Object> properties;
@@ -29,17 +31,23 @@ public class ComponentConfigurationImpl implements ComponentConfiguration
 	{}
 	
 	public ComponentConfigurationImpl(String pid,
+									  String factoryPid,
 									  Tocd  definition, 
 									  Map<String,Object> properties)
 	{
 		super();
 		this.pid = pid;
+		this.factoryPid = factoryPid;
 		this.definition = definition;
 		this.properties = properties;
 	}
 
 	public String getPid() {
 		return pid;
+	}
+	
+	public String getFactoryPid(){
+		return factoryPid;
 	}
 
 	public Tocd  getDefinition() {

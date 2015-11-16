@@ -33,6 +33,7 @@ public class XmlJavaComponentConfigurationsMapper implements XmlJavaDataMapper{
 	private static final String PROPERTIES = "properties";
 
 	private final static String CONFIGURATION_PID = "pid";
+	private final static String CONFIGURATION_FACTORY_PID = "factoryPid";
 
 	private static final String CONFIGURATIONS_CONFIGURATION = "configuration";
 	private final static String CONFIGURATIONS_CONFIGURATION_PROPERTY= "property";
@@ -227,7 +228,8 @@ public class XmlJavaComponentConfigurationsMapper implements XmlJavaDataMapper{
 		Map<String, Object> propertiesMap= xmlPropAdapter.unmarshal(xmlPropertiesAdapted);
 
 		String pid= configuration.getAttribute(CONFIGURATION_PID);
-		return new ComponentConfigurationImpl(pid, null, propertiesMap);
+		String factoryPid = configuration.getAttribute(CONFIGURATION_FACTORY_PID);
+		return new ComponentConfigurationImpl(pid, factoryPid, null, propertiesMap);
 	}
 
 	private XmlConfigPropertyAdapted parseProperty(Element property) {

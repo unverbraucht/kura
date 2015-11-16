@@ -261,7 +261,7 @@ public class NetworkConfigurationServiceImpl implements NetworkConfigurationServ
         s_logger.debug("getConfiguration()");
         try {
             NetworkConfiguration networkConfiguration = getNetworkConfiguration();
-            return new ComponentConfigurationImpl(PID, getDefinition(), networkConfiguration.getConfigurationProperties());
+            return new ComponentConfigurationImpl(PID, null, getDefinition(), networkConfiguration.getConfigurationProperties());
         } catch (Exception e) {
             throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
         }

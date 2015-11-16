@@ -35,6 +35,8 @@ public interface ComponentConfiguration
 	 */
 	public String getPid();
 	
+	public String getFactoryPid();
+	
 	
 	/**
 	 * Returns the raw ObjectClassDefinition as parsed from the MetaType

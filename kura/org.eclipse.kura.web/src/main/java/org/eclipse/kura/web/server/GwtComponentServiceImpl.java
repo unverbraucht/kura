@@ -62,6 +62,16 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 					continue;
 				}
 				
+				/*
+				if(config.getFactoryPid() != null){
+					continue;
+				}
+				*/
+				
+
+				Map<String,Object> asd = config.getConfigurationProperties();
+				System.out.println(asd);
+
 				OCD ocd = config.getDefinition();
 				if (ocd != null) {
 
@@ -163,6 +173,7 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 					String name1 = arg1.getPid().substring(arg1.getPid().lastIndexOf(".")); 
 					return name0.compareTo(name1);
 				}});
+			
 			for (ComponentConfiguration config : configs) {
 
 				// ignore items we want to hide

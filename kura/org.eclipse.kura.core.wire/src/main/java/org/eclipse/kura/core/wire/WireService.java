@@ -27,6 +27,9 @@ public class WireService implements ConfigurableComponent
     private ConfigurationService  m_configService;
     
     private String m_cloudPubPid;
+    private String m_devExamplePid;
+    private String m_devExamplePid2;
+    private String m_modbusExamplePid;
     
     // ----------------------------------------------------------------
     //
@@ -71,19 +74,36 @@ public class WireService implements ConfigurableComponent
         // save the bundle context and the properties
         m_ctx = componentContext;
 
+		/*
 		try {
-			String cloudPubFactPid = "org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher";
+			String deviceExampleFactPid = "org.eclipse.kura.example.wire.device.DeviceExample";
 			ComponentConfiguration compConfig;
-			compConfig = m_configService.getComponentDefaultConfiguration(cloudPubFactPid);
-			m_cloudPubPid = m_configService.createComponent(cloudPubFactPid, compConfig.getConfigurationProperties());	        
-			s_logger.info("Created CloudPublisher instance with pid {}", m_cloudPubPid);
+			compConfig = m_configService.getComponentDefaultConfiguration(deviceExampleFactPid);
+			m_devExamplePid = m_configService.createComponent(deviceExampleFactPid, compConfig.getConfigurationProperties());	        
+			s_logger.info("Created DeviceExample instance with pid {}", m_devExamplePid);
 		} 
 		catch (KuraException e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
 		}
 
-        Thread t = new Thread( new Runnable() {
+		//Try a second one
+		try {
+			String deviceExampleFactPid = "org.eclipse.kura.example.wire.device.DeviceExample";
+			ComponentConfiguration compConfig;
+			compConfig = m_configService.getComponentDefaultConfiguration(deviceExampleFactPid);
+			compConfig.getConfigurationProperties().put("sample.rate", 10);
+			m_devExamplePid2 = m_configService.createComponent(deviceExampleFactPid, compConfig.getConfigurationProperties());	        
+			s_logger.info("Created DeviceExample instance with pid {}", m_devExamplePid2);
+		} 
+		catch (KuraException e2) {
+			// TODO Auto-generated catch block
+			e2.printStackTrace();
+		}
+		*/
+		
+
+		Thread t = new Thread( new Runnable() {
 			@Override
 			public void run() {
 				
@@ -93,29 +113,66 @@ public class WireService implements ConfigurableComponent
 					// TODO Auto-generated catch block
 					e1.printStackTrace();
 				}
-				
-		        String heaterPid = "org.eclipse.kura.demo.heater.Heater";
-		        try {
-		        	
-		        	ServiceReference[] refs = m_ctx.getBundleContext().getServiceReferences("org.osgi.service.wireadmin.Producer", null);
-		        	System.err.println("refs: "+refs);
-
-		        	refs = m_ctx.getBundleContext().getServiceReferences("org.osgi.service.wireadmin.Producer", "(" + Constants.SERVICE_PID + "=" + heaterPid + ")");
-		        	System.err.println("refs: "+refs);
-					
-		        	refs = m_ctx.getBundleContext().getServiceReferences(heaterPid, "(" + Constants.SERVICE_PID + "=" + heaterPid + ")");
-		        	System.err.println("refs: "+refs);
-		        	
-				} catch (InvalidSyntaxException e1) {
+				try {
+					String cloudPubFactPid = "org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher";
+					ComponentConfiguration compConfig;
+					compConfig = m_configService.getComponentDefaultConfiguration(cloudPubFactPid);
+					m_cloudPubPid = m_configService.createComponent(cloudPubFactPid, compConfig.getConfigurationProperties());	        
+					s_logger.info("Created CloudPublisher instance with pid {}", m_cloudPubPid);
+				} 
+				catch (KuraException e2) {
 					// TODO Auto-generated catch block
-					e1.printStackTrace();
+					e2.printStackTrace();
 				}
-				
+
+
+				//Try a modbus one
+				try {
+					String modbusExampleFactPid = "org.eclipse.kura.example.wire.modbus.ModbusDevice";
+					ComponentConfiguration compConfig;
+					compConfig = m_configService.getComponentDefaultConfiguration(modbusExampleFactPid);
+					m_modbusExamplePid = m_configService.createComponent(modbusExampleFactPid, compConfig.getConfigurationProperties());	        
+					s_logger.info("Created ModbusExample instance with pid {}", m_modbusExamplePid);
+				} 
+				catch (KuraException e2) {
+					// TODO Auto-generated catch block
+					e2.printStackTrace();
+				}
+
+//		        String heaterPid = "org.eclipse.kura.demo.heater.Heater";
+//		        try {
+//		        	
+//		        	ServiceReference[] refs = m_ctx.getBundleContext().getServiceReferences("org.osgi.service.wireadmin.Producer", null);
+//		        	System.err.println("refs: "+refs);
+//
+//		        	refs = m_ctx.getBundleContext().getServiceReferences("org.osgi.service.wireadmin.Producer", "(" + Constants.SERVICE_PID + "=" + heaterPid + ")");
+//		        	System.err.println("refs: "+refs);
+//					
+//		        	refs = m_ctx.getBundleContext().getServiceReferences(heaterPid, "(" + Constants.SERVICE_PID + "=" + heaterPid + ")");
+//		        	System.err.println("refs: "+refs);
+//		        	
+//				} catch (InvalidSyntaxException e1) {
+//					// TODO Auto-generated catch block
+//					e1.printStackTrace();
+//				}
+					
 		        // build a CloudPublisher
-		        Wire wire = m_wireAdmin.createWire(heaterPid, m_cloudPubPid, null);		        
-		        s_logger.info("Created Wire between {} and {}.", heaterPid, m_cloudPubPid);
+				
+				/*
+		        Wire wire = m_wireAdmin.createWire(devicePid, m_cloudPubPid, null);		        
+		        s_logger.info("Created Wire between {} and {}.", devicePid, m_cloudPubPid);
 		        s_logger.info("Wire connected status: {}", wire.isConnected());
 		        
+		        Wire wire2 = m_wireAdmin.createWire(m_devExamplePid2, m_cloudPubPid, null);		        
+		        s_logger.info("Created Wire between {} and {}.", m_devExamplePid2, m_cloudPubPid);
+		        s_logger.info("Wire connected status: {}", wire2.isConnected());
+				*/
+				
+				/*
+		        Wire wire3 = m_wireAdmin.createWire(m_modbusExamplePid, m_cloudPubPid, null);		        
+		        s_logger.info("Created Wire between {} and {}.", m_modbusExamplePid, m_cloudPubPid);
+		        s_logger.info("Wire connected status: {}", wire3.isConnected());
+
 		        try {
 					
 		        	Wire[] wires = m_wireAdmin.getWires(null);
@@ -125,6 +182,7 @@ public class WireService implements ConfigurableComponent
 					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
+				*/
 			}
         });
         t.start();
