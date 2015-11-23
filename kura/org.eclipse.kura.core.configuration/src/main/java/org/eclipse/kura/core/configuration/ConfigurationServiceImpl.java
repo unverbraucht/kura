@@ -350,6 +350,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		throws KuraException
 	{
 		try {
+			// FIXME: when a component is a deleted, is its configuration removed from the kura snapshot? 
 			Configuration conf = m_configurationAdmin.getConfiguration(pid);
 			if (conf != null) {
 				conf.delete();
@@ -723,6 +724,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 	private synchronized long saveSnapshot(List<? extends ComponentConfiguration> configs) throws KuraException {
 		//List<ComponentConfigurationImpl> configImpls = configs;//encryptConfigs(configs);
 
+		// FIXME: Add support for factoryPid for multiton components
 		List<ComponentConfigurationImpl> configImpls = new ArrayList<ComponentConfigurationImpl>();
 		for (ComponentConfiguration config : configs) {
 			if (config instanceof ComponentConfigurationImpl) {

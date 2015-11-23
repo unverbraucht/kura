@@ -19,13 +19,13 @@
 
         <Icon resource="WireService" size="32"/>
                 
-        <AD id="graph"
-            name="graph"
+        <AD id="wires"
+            name="wires"
             type="String"
             cardinality="1"
-            required="true"
-            default="aa"
-            description="aaa">
+            required="false"
+            default=""
+            description="JSON description of a wire. The format has a producer PID, a consumer PID and, optionally, a set of properties for the wire.">
         </AD>
     </OCD>
     

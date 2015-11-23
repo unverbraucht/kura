@@ -1,16 +1,17 @@
 package org.eclipse.kura.core.wire;
 
-import java.util.Hashtable;
 import java.util.Map;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.ComponentConfiguration;
 import org.eclipse.kura.configuration.ConfigurableComponent;
 import org.eclipse.kura.configuration.ConfigurationService;
+import org.json.JSONException;
 import org.osgi.framework.Constants;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
+import org.osgi.service.component.ComponentException;
 import org.osgi.service.wireadmin.Wire;
 import org.osgi.service.wireadmin.WireAdmin;
 import org.slf4j.Logger;
@@ -20,11 +21,11 @@ public class WireService implements ConfigurableComponent
 {
     private static final Logger s_logger = LoggerFactory.getLogger(WireService.class);
 
-    @SuppressWarnings("unused")
     private ComponentContext      m_ctx;
 
     private WireAdmin             m_wireAdmin;
     private ConfigurationService  m_configService;
+    private WireServiceOptions    m_options;
     
     private String m_cloudPubPid;
     private String m_devExamplePid;
@@ -68,15 +69,76 @@ public class WireService implements ConfigurableComponent
     // ----------------------------------------------------------------
 
     protected void activate(ComponentContext componentContext, Map<String,Object> properties) 
+    	throws ComponentException
     {
         s_logger.info("activate...");
 
         // save the bundle context and the properties
-        m_ctx = componentContext;
+        m_ctx = componentContext;        
+    	try {
+			m_options = WireServiceOptions.newInstance(properties);
+		} 
+    	catch (JSONException jsone) {
+    		throw new ComponentException(jsone);
+		}
+        
+        try { 
+        	
+ 			String cloudPubFactPid = "org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher";
+ 			ComponentConfiguration compConfig;
+ 			compConfig = m_configService.getComponentDefaultConfiguration(cloudPubFactPid);
+ 			m_cloudPubPid = m_configService.createComponent(cloudPubFactPid, compConfig.getConfigurationProperties());	        
+ 			s_logger.info("Created CloudPublisher instance with pid {}", m_cloudPubPid);
+
+ 			String dbStoreFactPid = "org.eclipse.kura.core.wire.store.DbWireRecordStore";
+ 			compConfig = m_configService.getComponentDefaultConfiguration(dbStoreFactPid);
+ 			String dbStorePubPid = m_configService.createComponent(dbStoreFactPid, compConfig.getConfigurationProperties());	        
+ 			s_logger.info("Created CloudPublisher instance with pid {}", dbStorePubPid);
+ 			
+	        String heaterPid = "org.eclipse.kura.demo.heater.Heater";
+	        Wire wire = m_wireAdmin.createWire(heaterPid, m_cloudPubPid, null);		        
+	        s_logger.info("Created Wire between {} and {}.", heaterPid, m_cloudPubPid);
+	        s_logger.info("Wire connected status: {}", wire.isConnected());
+	        
+	        Wire wire1 = m_wireAdmin.createWire(heaterPid, dbStorePubPid, null);		        
+	        s_logger.info("Created Wire between {} and {}.", heaterPid, dbStorePubPid);
+	        s_logger.info("Wire connected status: {}", wire1.isConnected());
+	        	        
+        	Wire[] wires = m_wireAdmin.getWires(null);
+        	System.err.println("wires: "+wires);
+ 		} 
+ 		catch (Exception e2) {
+ 			// TODO Auto-generated catch block
+ 			e2.printStackTrace();
+ 		}
+
+    }    	
+    	
+/*    	
+    	
+    	// rebuild the graph
+    	resetGraph();
+    }
+    
+    private synchronized void resetGraph() 
+    {
+    	// delete graph
+    	Wire[] wires = m_wireAdmin.getWires(null);
+    	for (Wire wire : wires) {
+    		m_wireAdmin.deleteWire(wire);
+    	}
+    	
+    	// build graph
+    	for (WireConfiguration wireConf : m_options.getWireConfigurations()) {    	
+    		createWire(wireConf);
+    	}
+    	buildGraph();
+    }
 
 		/*
 		try {
 			String deviceExampleFactPid = "org.eclipse.kura.example.wire.device.DeviceExample";
+
 			ComponentConfiguration compConfig;
 			compConfig = m_configService.getComponentDefaultConfiguration(deviceExampleFactPid);
 			m_devExamplePid = m_configService.createComponent(deviceExampleFactPid, compConfig.getConfigurationProperties());	        
@@ -187,6 +249,7 @@ public class WireService implements ConfigurableComponent
         });
         t.start();
     }
+*/
 
     public void updated(Map<String,Object> properties)
     {
