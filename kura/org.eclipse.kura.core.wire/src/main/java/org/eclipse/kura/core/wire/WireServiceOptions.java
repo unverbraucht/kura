@@ -14,7 +14,7 @@ import org.json.JSONObject;
  */
 public class WireServiceOptions 
 {
-	private static final String CONF_WIRES = "wires";
+	public static final String CONF_WIRES = "wires";
 	
 	private List<WireConfiguration> m_wireConfigurations;
 	
@@ -45,6 +45,9 @@ public class WireServiceOptions
 		return new WireServiceOptions(wireConfs);
 	}
 
+	public List<WireConfiguration> getWires(){
+		return m_wireConfigurations;
+	}
 
 	public String toJsonString() 
 		throws JSONException 

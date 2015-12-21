@@ -39,6 +39,7 @@ import org.eclipse.kura.KuraErrorCode;
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.KuraPartialSuccessException;
 import org.eclipse.kura.configuration.ComponentConfiguration;
+import org.eclipse.kura.configuration.ConfigurationCallback;
 import org.eclipse.kura.configuration.ConfigurationService;
 import org.eclipse.kura.configuration.Password;
 import org.eclipse.kura.configuration.SelfConfiguringComponent;
@@ -77,6 +78,9 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 {
 	private static final Logger s_logger = LoggerFactory.getLogger(ConfigurationServiceImpl.class);
 
+	private static final String PROP_FACTORY_PID = "service.factoryPid";
+	private static final String PROP_SERVICE_PID = "service.pid";
+	
 	private ComponentContext m_ctx;
 	private CloudConfigurationHandler m_cloudHandler;
 	private ServiceTracker<?, ?> m_serviceTracker;
@@ -99,10 +103,16 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	// contains the factory PIDs of all the multiton components
 	private Set<String> m_factoryPids;
+	// contains the factory pid for each multiton instance
+	private Map<String, String> m_pidsAndFactories;
 	
 	// contains all pids which have been configured and for which we have not
 	// received the corresponding ConfigurationEvent yet
 	private Set<String> m_pendingConfigurationPids;
+	
+	private Map<String, String> m_multitonPids;
+	
+	private List<ConfigurationCallback> m_callbacks;
 
 	// ----------------------------------------------------------------
 	//
@@ -148,6 +158,9 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		m_pendingConfigurationPids = new HashSet<String>();
 		m_ocds = new HashMap<String, Tocd>();
 		m_factoryPids = new HashSet<String>();
+		m_pidsAndFactories = new HashMap<String, String>();
+		m_multitonPids = new HashMap<String, String>();
+		m_callbacks = new ArrayList<ConfigurationCallback>();
 	}
 
 	// ----------------------------------------------------------------
@@ -290,11 +303,19 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 	@Override
 	public synchronized void updateConfiguration(String pidToUpdate, Map<String, Object> propertiesToUpdate) throws KuraException {
 		List<ComponentConfigurationImpl> configs = new ArrayList<ComponentConfigurationImpl>();
-		ComponentConfigurationImpl cci = new ComponentConfigurationImpl(pidToUpdate, null, null, propertiesToUpdate);
+		ComponentConfigurationImpl cci = new ComponentConfigurationImpl(pidToUpdate, null, propertiesToUpdate);
 		configs.add(cci);
 		updateConfigurations((List<ComponentConfiguration>) (List<?>) configs);	
 	}
 
+	@SuppressWarnings("unchecked")
+	@Override
+	public synchronized void updateConfiguration(String pidToUpdate, Map<String, Object> propertiesToUpdate, boolean takeSnapshot) throws KuraException {
+		List<ComponentConfigurationImpl> configs = new ArrayList<ComponentConfigurationImpl>();
+		ComponentConfigurationImpl cci = new ComponentConfigurationImpl(pidToUpdate, null, propertiesToUpdate);
+		configs.add(cci);
+		updateConfigurationsInternal((List<ComponentConfiguration>) (List<?>) configs, takeSnapshot);	
+	}
 
 	// ----------------------------------------------------------------
 	//
@@ -314,7 +335,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		Map<String,Object> props = ComponentUtil.getDefaultProperties(ocd, m_ctx);
 		
 		ComponentConfiguration compConfImpl = null;
-		compConfImpl = new ComponentConfigurationImpl(factoryPid, null, ocd, props);
+		compConfImpl = new ComponentConfigurationImpl(factoryPid, ocd, props);
 		return compConfImpl;
 	}
 
@@ -332,8 +353,9 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	        // following update() invocations will find existing instance and invoke @Modified
 			OCD ocd = m_ocds.get(factoryPid);
-			Map<String,Object> props = ComponentUtil.getDefaultProperties(ocd, m_ctx);
-			Dictionary dict = CollectionsUtil.mapToDictionary(props);
+			//Map<String,Object> props = ComponentUtil.getDefaultProperties(ocd, m_ctx);
+			//Dictionary dict = CollectionsUtil.mapToDictionary(props);
+			Dictionary dict = CollectionsUtil.mapToDictionary(properties);
 	        m_configurationAdmin.getConfiguration(instancePid, null).update(dict);
 	        
 	        s_logger.info("Created new component instance for factory {} with instance id {}", factoryPid, instancePid);
@@ -341,6 +363,8 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		catch (IOException e) {
 			throw new KuraException(KuraErrorCode.CONFIGURATION_ERROR, e, "Cannot create component instance for factory "+factoryPid);
 		}
+		
+		m_pidsAndFactories.put(instancePid, factoryPid);
 		return instancePid;
 	}
 
@@ -433,7 +457,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 				ServiceReference<?>[] refs = m_ctx.getBundleContext().getServiceReferences((String) null, null);
 				if (refs != null) {
 					for (ServiceReference<?> ref : refs) {
-						String ppid = (String) ref.getProperty("service.pid");
+						String ppid = (String) ref.getProperty(PROP_SERVICE_PID);
 						if (pid.equals(ppid)) {
 							Bundle bundle = ref.getBundle();
 							try {
@@ -497,6 +521,10 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	@Override
 	public synchronized void updateConfigurations(List<ComponentConfiguration> configsToUpdate) throws KuraException {
+		updateConfigurationsInternal(configsToUpdate, true);
+	}
+	
+	public synchronized void updateConfigurationsInternal(List<ComponentConfiguration> configsToUpdate, boolean takeSnapshot) throws KuraException {
 		boolean snapshotOnConfirmation = false;
 		List<Throwable> causes = new ArrayList<Throwable>();
 		for (ComponentConfiguration config : configsToUpdate) {
@@ -518,13 +546,14 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 			}
 		}
 
-		saveSnapshot(configs);
+		if(takeSnapshot){
+			saveSnapshot(configs);
+		}
 
 		if (causes.size() > 0) {
 			throw new KuraPartialSuccessException("updateConfigurations", causes);
 		}
 	}
-	
 
 	// ----------------------------------------------------------------
 	//
@@ -547,6 +576,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 			// register the component instance
 			s_logger.info("Registration of ConfigurableComponent {} by {}...", pid, this);
 			m_allActivatedPids.add(pid);
+			notifyCallbacks(pid, true);
 		}
 
 		if (factoryPid != null && !m_ocds.containsKey(pid)) {
@@ -570,6 +600,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 		m_allActivatedPids.add(pid);
 		m_activatedSelfConfigComponents.add(pid);
+		notifyCallbacks(pid, true);
 	}
 
 	void unregisterComponentConfiguration(String pid) {
@@ -581,6 +612,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		m_allActivatedPids.remove(pid);
 		m_ocds.remove(pid);
 		m_activatedSelfConfigComponents.remove(pid);
+		notifyCallbacks(pid, false);
 	}
 
 	boolean mergeWithDefaults(OCD ocd, Map<String, Object> properties) throws KuraException {
@@ -589,6 +621,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 		Map<String, Object> defaults = ComponentUtil.getDefaultProperties(ocd, m_ctx);
 		Set<String> defaultsKeys = defaults.keySet();
+
 		defaultsKeys.removeAll(keys);
 		if (!defaultsKeys.isEmpty()) {
 
@@ -811,7 +844,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 			Map<String, Object> cleanedProps= cleanProperties(props, pid);
 
-			cc = new ComponentConfigurationImpl(pid, cfg.getFactoryPid(), ocd, cleanedProps); 
+			cc = new ComponentConfigurationImpl(pid, ocd, cleanedProps); 
 		} catch (Exception e) {
 			s_logger.error("Error getting Configuration for component: " + pid + ". Ignoring it.", e);
 		}
@@ -824,7 +857,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 			ServiceReference<?>[] refs = m_ctx.getBundleContext().getServiceReferences((String) null, null);
 			if (refs != null) {
 				for (ServiceReference<?> ref : refs) {
-					String ppid = (String) ref.getProperty("service.pid");
+					String ppid = (String) ref.getProperty(PROP_SERVICE_PID);
 					if (pid.equals(ppid)) {		
 						Object obj = m_ctx.getBundleContext().getService(ref);
 						try {
@@ -978,6 +1011,28 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		for (ComponentConfigurationImpl config : configs) {
 			if (config != null) {
 				Configuration cfg;
+				
+				Map<String, Object> confs = config.getConfigurationProperties();
+				if(confs != null){
+					Object s = confs.get(PROP_FACTORY_PID);
+					if(s!=null){
+						s_logger.error("***************************************************************");
+						s_logger.error("***************************************************************");
+						s_logger.error("***************************************************************");
+						s_logger.error(config.getConfigurationProperties().get(PROP_FACTORY_PID).toString());
+						String factoryPid = s.toString();
+			 			//ComponentConfiguration compConfig;
+			 			//compConfig = getComponentDefaultConfiguration(factoryPid);
+			 			String newPid = createComponent(factoryPid, confs);
+			 			m_multitonPids.put(confs.get(PROP_SERVICE_PID).toString(), newPid);
+			 			s_logger.error("Created {} instance with pid {}", factoryPid, newPid);
+			 			s_logger.error("Added to m_oldPid: {} - {}",confs.get(PROP_SERVICE_PID).toString(),newPid);
+						s_logger.error("***************************************************************");
+						s_logger.error("***************************************************************");
+						s_logger.error("***************************************************************");
+					}
+				}
+				
 				try {
 					s_logger.debug("Pushing config to config admin: {}", config.getPid());
 
@@ -1188,7 +1243,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		} else {
 			s_logger.info("Snapshot on EventAdmin configuration will be taken for {}.", pid);
 		}
-
+		
 		Map<String, Object> cleanedProperties= cleanProperties(mergedProperties, pid);
 
 		// Update the new properties
@@ -1269,6 +1324,9 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 	}
 
 	private Map<String, Object> cleanProperties(Map<String, Object> mergedProperties, String pid) {
+
+		Map<String, Object> cleanedProperties= new HashMap<String, Object> (mergedProperties);
+		
 		if (!m_activatedSelfConfigComponents.contains(pid)) {
 			Tocd componentOcd= m_ocds.get(pid);
 			Set<String> metatypeNames= new HashSet<String>();
@@ -1284,7 +1342,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 				}
 			}
 
-			Map<String, Object> cleanedProperties= new HashMap<String, Object> ();
+			cleanedProperties= new HashMap<String, Object> ();
 			Set<String> mergedKeys= mergedProperties.keySet();
 			for(String key: mergedKeys){
 				if(metatypeNames.contains(key)){
@@ -1292,13 +1350,21 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 					cleanedProperties.put(key, value);
 				}
 			}
-			return cleanedProperties;
-		}else{
-			Map<String, Object> cleanedProperties= new HashMap<String, Object> (mergedProperties);
-			return cleanedProperties;
+		}
+		
+		addPidsToProperties(pid, cleanedProperties);
+		
+		return cleanedProperties;
+	}
+	
+	private void addPidsToProperties(String pid, Map<String, Object> props){
+		props.put(PROP_SERVICE_PID, pid);
+		String factPid = m_pidsAndFactories.get(pid);
+		if(factPid != null){
+			props.put(PROP_FACTORY_PID, factPid);
 		}
 	}
-
+	
 	private synchronized List<ComponentConfiguration> buildCurrentConfiguration(List<ComponentConfiguration> configsToUpdate) throws KuraException {
 		// Build the current configuration
 		ComponentConfiguration cc = null;
@@ -1316,7 +1382,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 						// found a match
 						isConfigToUpdate = true;
 						Map<String, Object> cleanedProps= cleanProperties(configToUpdate.getConfigurationProperties(), pid);
-						ComponentConfiguration cleanedConfig= new ComponentConfigurationImpl(pid, configToUpdate.getFactoryPid(), (Tocd) configToUpdate.getDefinition(), cleanedProps);
+						ComponentConfiguration cleanedConfig= new ComponentConfigurationImpl(pid, (Tocd) configToUpdate.getDefinition(), cleanedProps);
 						configs.add(cleanedConfig);
 						break;
 					}
@@ -1331,15 +1397,17 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 				}
 				if (cc != null && cc.getPid() != null && cc.getPid().equals(pid)) {
 					props = cc.getConfigurationProperties();
-					cci = new ComponentConfigurationImpl(pid, cc.getFactoryPid(), null, props);
+					cci = new ComponentConfigurationImpl(pid, null, props);
 					configs.add((ComponentConfigurationImpl) cci);
 				}
 			}
 		}
 
-		// merge the current configs with those in the latest snapshot
+		// retrieve configs from latest snapshot
 		List<ComponentConfigurationImpl> snapshotConfigs = loadLatestSnapshotConfigurations();
 		if(snapshotConfigs != null){
+		
+			// merge the current configs with those in the latest snapshot
 			for (ComponentConfigurationImpl snapshotConfig : snapshotConfigs) {
 				boolean found = false;
 				for (ComponentConfiguration config : configs) {
@@ -1349,11 +1417,54 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 					}
 				}
 				if (!found) {
-					configs.add(snapshotConfig);
+					// Add old configurations (or not yet tracked ones) present in the snapshot
+					// only if they are not multiton instances
+					if(snapshotConfig.getConfigurationProperties().get("service.factoryPid") == null){
+						configs.add(snapshotConfig);
+					}
 				}
 			}
+			
 		}
 
 		return configs;
+	}
+
+	@Override
+	public Map<String, String> getMultitonPidsMap() {
+		return m_multitonPids;
+	}
+
+	@Override
+	public void addComponentRegistrationCallback(ConfigurationCallback callback) {
+		m_callbacks.add(callback);		
+	}
+
+	@Override
+	public void removeComponentRegistrationCallback(ConfigurationCallback callback) {
+		m_callbacks.remove(callback);
+	}
+	
+	private void notifyCallbacks(String pid, boolean registered){
+		for(ConfigurationCallback c : m_callbacks){
+			boolean notify = false;
+			if(c.getFilter() == null){
+				notify = true;
+			}else{
+				for(String s : c.getFilter()){
+					if(s.equals(pid)){
+						notify = true;
+						break;
+					}
+				}
+			}
+			if(notify){
+				if(registered){
+					c.componentRegistered(pid);
+				} else{
+					c.componentUnregistered(pid);
+				}
+			}
+		}
 	}
 }

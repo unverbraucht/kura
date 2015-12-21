@@ -16,11 +16,12 @@ Import-Package: org.eclipse.kura;version="[1.0,2.0)",
  org.eclipse.kura.db;version="1.0.0",
  org.eclipse.kura.message;version="[1.0,2.0)",
  org.eclipse.kura.wire;version="1.0.0",
+ org.json,
  org.osgi.framework;version="1.5.0",
+ org.osgi.service.cm;version="1.4.0",
  org.osgi.service.component;version="1.2.0",
  org.osgi.service.wireadmin;version="1.0.1",
  org.osgi.util.measurement;version="1.0.1",
  org.osgi.util.position;version="1.0.1",
- org.slf4j;version="1.6.4",
- org.json
+ org.slf4j;version="1.6.4"
 Export-Package: org.eclipse.kura.core.wire;version="1.0.0"

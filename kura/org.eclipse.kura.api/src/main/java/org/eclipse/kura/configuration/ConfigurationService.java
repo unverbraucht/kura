@@ -71,6 +71,24 @@ public interface ConfigurationService
 	public void deleteComponent(String pid) throws KuraException;
 
 	/**
+	 * Returns a map of pid values. Each couple is a link between the old service.pid of a multiton component, and its current one. 
+	 */
+	public Map<String, String> getMultitonPidsMap();
+	
+	/**
+	 * Adds a ConfigurationCallback to track component registration. A string filter can be specified for a specific pid on each callback. 
+	 * If no filter is specified, the callback is called for each registered/unregistered component
+	 * @param callback
+	 */
+	public void addComponentRegistrationCallback(ConfigurationCallback callback);
+	
+	/**
+	 * Removes a previously assigned callback. If no callback is found, fails silently.
+	 * @param callback
+	 */
+	public void removeComponentRegistrationCallback(ConfigurationCallback callback);
+	
+	/**
 	 * Return the PIDs (service's persistent identity) for all the services that 
 	 * implements the ConfigurableComponent Maker interface and registered themselves
 	 * with the container.
@@ -124,6 +142,30 @@ public interface ConfigurationService
 	public void updateConfiguration(String pid, Map<String,Object> properties)
 		throws KuraException;
 
+	/**
+	 * Updates the Configuration of the registered component with the specified pid.
+	 * Using the OSGi ConfigurationAdmin, it retrieves the Configuration of the 
+	 * component with the specified PID and then send an update using the 
+	 * specified properties.
+	 * <br>
+	 * If the component to be updated is not yet registered with the ConfigurationService,
+	 * it is first registered and then it is updated with the specified properties.
+	 * Before updating the component, the specified properties are validated against
+	 * the ObjectClassDefinition associated to the Component. The Configuration Service
+	 * is fully compliant with the OSGi MetaType Information and the validation happens
+	 * through the OSGi MetaType Service.
+	 * <br>
+	 * The Configuration Service is compliant with the OSGi MetaType Service so 
+	 * it accepts all attribute types defined in the OSGi Compendium Specifications.
+	 * <br>
+	 * 
+	 * @param pid The ID of the component whose configuration is requested.
+	 * @param properties Properties to be used as the new Configuration for the specified Component.
+	 * @param takeSnapshot defines wheter or not this configuration update should trigger a snapshot
+	 * @throws KuraException if the properties specified do not pass the validation of the ObjectClassDefinition
+	 */
+	public void updateConfiguration(String pid, Map<String,Object> properties, boolean takeSnapshot)
+		throws KuraException;
 
 	/**
 	 * Updates the Configuration of the registered components.

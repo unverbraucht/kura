@@ -23,10 +23,10 @@
             name="wires"
             type="String"
             cardinality="1"
-            required="false"
-            default=""
-            description="JSON description of a wire. The format has a producer PID, a consumer PID and, optionally, a set of properties for the wire.">
-        </AD>
+            required="true"
+            default="[]"
+            description="JSON description of a wire. The format has a producer PID, a consumer PID and, optionally, a set of properties for the wire."
+            />
     </OCD>
     
     <Designate pid="org.eclipse.kura.core.wire.WireService">

@@ -87,7 +87,7 @@ public class ComponentConfigurationImplTest extends TestCase
 		
 		XmlComponentConfigurations xcc = new XmlComponentConfigurations();
 		List<ComponentConfigurationImpl> ccis = new ArrayList<ComponentConfigurationImpl>();
-		ComponentConfigurationImpl config = new ComponentConfigurationImpl(pid, null, definition, properties);
+		ComponentConfigurationImpl config = new ComponentConfigurationImpl(pid, definition, properties);
 		ccis.add(config);
 		xcc.setConfigurations(ccis);
 		
@@ -123,7 +123,7 @@ public class ComponentConfigurationImplTest extends TestCase
 		
 		XmlComponentConfigurations xcc = new XmlComponentConfigurations();
 		List<ComponentConfigurationImpl> ccis = new ArrayList<ComponentConfigurationImpl>();
-		ComponentConfigurationImpl config = new ComponentConfigurationImpl(pid, null, definition, properties);
+		ComponentConfigurationImpl config = new ComponentConfigurationImpl(pid, definition, properties);
 		ccis.add(config);
 		xcc.setConfigurations(ccis);
 		

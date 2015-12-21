@@ -93,12 +93,11 @@ public class DbWireRecordFilter implements WireEmitter, WireReceiver, Configurab
         m_options = new DbWireRecordFilterOptions(properties);
 
         // FIXME: remove test code
-        try {
-			List<WireRecord> records = refreshDataView();
-		} catch (SQLException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}        
+//        try {
+//			List<WireRecord> records = refreshDataView();
+//		} catch (SQLException e) {
+//			e.printStackTrace();
+//		}        
     }
 
     public void updated(Map<String,Object> properties)
@@ -107,6 +106,13 @@ public class DbWireRecordFilter implements WireEmitter, WireReceiver, Configurab
 
         // Update properties
         m_options = new DbWireRecordFilterOptions(properties);
+        try {
+			List<WireRecord> records = refreshDataView();
+		} catch (SQLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}        
+        
     }
 
     protected void deactivate(ComponentContext componentContext) 
@@ -135,6 +141,7 @@ public class DbWireRecordFilter implements WireEmitter, WireReceiver, Configurab
     @Override
     public synchronized void onWireReceive(WireEnvelope wireEvelope) 
     {
+    	s_logger.error("wireEnvelope received!");
     	// FIXME: add implementation for onWireReceive 
     }
     

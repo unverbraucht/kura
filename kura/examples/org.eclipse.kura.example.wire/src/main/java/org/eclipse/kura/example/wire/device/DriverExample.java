@@ -43,6 +43,15 @@ public class DriverExample implements DeviceConnection {
 
 	@Override
 	public Object read(String address) throws KuraException {
+		if(address.equals("1")){
+			m_values.put("1", m_random.nextInt());
+		}
+		if(address.equals("2")){
+			m_values.put("2", m_random.nextDouble());
+		}
+		if(address.equals("3")){
+			m_values.put("3", String.valueOf(m_random.nextGaussian()));
+		}		
 		return m_values.get(address);
 	}
 

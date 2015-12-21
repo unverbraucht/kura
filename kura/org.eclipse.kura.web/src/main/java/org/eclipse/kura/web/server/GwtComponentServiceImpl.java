@@ -17,6 +17,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.kura.configuration.ComponentConfiguration;
 import org.eclipse.kura.configuration.ConfigurationService;
@@ -62,16 +63,6 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 					continue;
 				}
 				
-				/*
-				if(config.getFactoryPid() != null){
-					continue;
-				}
-				*/
-				
-
-				Map<String,Object> asd = config.getConfigurationProperties();
-				System.out.println(asd);
-
 				OCD ocd = config.getDefinition();
 				if (ocd != null) {
 

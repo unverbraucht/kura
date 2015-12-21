@@ -362,6 +362,7 @@ public class DbWireRecordStore implements WireEmitter, WireReceiver, Configurabl
         // escape all bad SQL characters that should not be allowed in table and column names
         // FIXME: find an implementation and plug it in
     	String s1 = s.replace('.', '_');
+    	s1 = s1.replace(' ', '_');
         return s1.toUpperCase();        
     }
     

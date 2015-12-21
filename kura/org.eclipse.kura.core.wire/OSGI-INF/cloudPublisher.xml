@@ -21,6 +21,9 @@
                immediate="true" 
                configuration-policy="require"> 
    <implementation class="org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher"/>
+   
+   <property name="service.pid" value="org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher"/>
+   
    <service>
       <provide interface="org.eclipse.kura.configuration.ConfigurableComponent"/>
       <provide interface="org.eclipse.kura.data.DataServiceListener"/>
