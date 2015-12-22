@@ -2,11 +2,14 @@ package org.eclipse.kura.core.wire;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.swing.event.ListSelectionEvent;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.ComponentConfiguration;
@@ -194,23 +197,58 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		Object consumerPid = properties.get("consumer.pids");
 
 		if (emitterPid != null && consumerPid != null) {
-			String emitterString = createComponentFromProperty((String)emitterPid);
-			String consumerString = createComponentFromProperty((String)consumerPid);
-			createNewWire(emitterString, consumerString);
+			if (!emitterPid.toString().equals("NONE") && !consumerPid.toString().equals("NONE")) {
+				String emitterString = createComponentFromProperty(emitterPid.toString());
+				String consumerString = createComponentFromProperty(consumerPid.toString());
+				createNewWire(emitterString, consumerString);
 
-			WireConfiguration wc = new WireConfiguration(emitterString, consumerString, null);
-			m_wireConfig.add(wc);
-			
-			persistWires();
+				WireConfiguration wc = new WireConfiguration(emitterString, consumerString, null);
+				m_wireConfig.add(wc);
+
+				persistWires();
+			}
+		}
+
+		Object wiresDelete = properties.get("delete.wires");
+		if (wiresDelete != null) {
+			if (!wiresDelete.toString().equals("NONE")) {
+				int index = Integer.valueOf(wiresDelete.toString());
+				WireConfiguration wc = m_wireConfig.get(index);
+				removeWire(wc);
+
+				persistWires();
+			}
+		}
+		
+		Object instancesDelete = properties.get("delete.instances");
+		if(instancesDelete != null){
+			if(!instancesDelete.toString().equals("NONE")){
+				//First delete the wires
+				WireConfiguration[] copy = m_wireConfig.toArray(new WireConfiguration[]{});
+				for(WireConfiguration wc : copy){
+					if(wc.getProducerPid().equals(instancesDelete.toString()) ||
+					   wc.getConsumerPid().equals(instancesDelete.toString())){
+						removeWire(wc);
+					}
+				}
+				//Then delete the instance
+				try {
+					m_configService.deleteComponent(instancesDelete.toString());
+				} catch (KuraException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				persistWires();
+			}
 		}
 
 	}
-	
-	private String createComponentFromProperty(String value){
+
+	private String createComponentFromProperty(String value) {
 		String[] tokens = value.split("\\|");
-		if(tokens[0].equals("FACTORY")){
+		if (tokens[0].equals("FACTORY")) {
 			return createComponent(tokens[1]);
-		}else{
+		} else {
 			return tokens[1];
 		}
 	}
@@ -291,6 +329,25 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		return conf;
 	}
 
+	public Wire removeWire(WireConfiguration theWire) {
+		try {
+			Wire[] list = m_wireAdmin.getWires(null);
+			for (Wire w : list) {
+				String prod = w.getProperties().get(PROP_PRODUCER_PID).toString();
+				String cons = w.getProperties().get(PROP_CONSUMER_PID).toString();
+				if (prod.equals(theWire.getProducerPid()) && cons.equals(theWire.getConsumerPid())) {
+					m_wireAdmin.deleteWire(w);
+					m_wireConfig.remove(theWire);
+					return w;
+				}
+			}
+		} catch (InvalidSyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
 	public WireConfiguration removeWire(Wire theWire) {
 		m_wireAdmin.deleteWire(theWire);
 		for (WireConfiguration c : m_wireConfig) {
@@ -352,7 +409,11 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		emitterTad.setName("emitter.pids");
 		emitterTad.setType(Tscalar.STRING);
 		emitterTad.setCardinality(0);
-		emitterTad.setRequired(true);
+		emitterTad.setRequired(false);
+		Toption defaultOpt = new Toption();
+		defaultOpt.setLabel("No new multiton");
+		defaultOpt.setValue("NONE");
+		emitterTad.getOption().add(defaultOpt);
 		StringBuilder sb = new StringBuilder();
 		for (String emitterOption : emittersOptions) {
 			Toption opt = new Toption();
@@ -368,7 +429,6 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		// Create an option element for each producer factory
 		ArrayList<String> consumersOptions = new ArrayList<String>();
 
-		
 		for (String factoryPid : factoryPids) {
 			consumersOptions.addAll(searchForInterface(factoryPid, WireReceiver.class));
 		}
@@ -378,7 +438,8 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		consumerTad.setName("consumer.pids");
 		consumerTad.setType(Tscalar.STRING);
 		consumerTad.setCardinality(0);
-		consumerTad.setRequired(true);
+		consumerTad.setRequired(false);
+		consumerTad.getOption().add(defaultOpt);
 		sb = new StringBuilder();
 		for (String consumerOption : consumersOptions) {
 			Toption opt = new Toption();
@@ -401,6 +462,49 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		sb.append("</table>");
 		consumerTad.setDescription(sb.toString());
 		WiresOCD.addAD(consumerTad);
+
+		Tad wiresTad = new Tad();
+		wiresTad.setName("delete.wires");
+		wiresTad.setId("delete.wires");
+		wiresTad.setType(Tscalar.STRING);
+		wiresTad.setCardinality(0);
+		wiresTad.setRequired(true);
+		wiresTad.setDefault("Do not delete any wire");
+		for (int i = 0; i < m_wireConfig.size(); i++) {
+			WireConfiguration wc = m_wireConfig.get(i);
+			Toption o = new Toption();
+			o.setLabel("P:" + wc.getProducerPid() + " - C:" + wc.getConsumerPid());
+			o.setValue(String.valueOf(i));
+			wiresTad.getOption().add(o);
+		}
+		Toption o = new Toption();
+		o.setLabel("Do not delete any wire");
+		o.setValue("NONE");
+		wiresTad.getOption().add(o);
+		wiresTad.setDescription("Select a Wire from the list. It will be deleted when submitting the changes.");
+		WiresOCD.addAD(wiresTad);
+
+		Tad servicesTad = new Tad();
+		servicesTad.setName("delete.instances");
+		servicesTad.setId("delete.instances");
+		servicesTad.setType(Tscalar.STRING);
+		servicesTad.setCardinality(0);
+		servicesTad.setRequired(true);
+		servicesTad.setDefault("Do not delete any instance");
+		Toption opt = new Toption();
+		opt.setLabel("Do not delete any instance");
+		opt.setValue("NONE");
+		servicesTad.getOption().add(opt);
+
+		for(String s : getEmittersAndConsumers()){
+			o = new Toption();
+			o.setLabel(s);
+			o.setValue(s);
+			servicesTad.getOption().add(o);
+		}
+		
+		servicesTad.setDescription("Select an Instance from the list. The instance and all connected Wires will be deledet when submitting the changes.");
+		WiresOCD.addAD(servicesTad);
 
 		try {
 			m_properties = new HashMap<String, Object>();
@@ -428,7 +532,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 					// If it doesn't fail introspect for the interface
 					if (iface.isAssignableFrom(clazz)) {
 						// Found a class implementing the interface.
-						result.add("FACTORY|"+factoryPid);
+						result.add("FACTORY|" + factoryPid);
 					} else {
 						// Found the class, but it doesn't implement the
 						// interface.
@@ -441,18 +545,39 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 				}
 			}
 		}
-		
-		//After the factories, iterate through available services implementing the passed interface
+
+		// After the factories, iterate through available services implementing
+		// the passed interface
 		try {
 			Collection<ServiceReference<?>> services = m_ctx.getBundleContext().getServiceReferences(iface, null);
-			for(ServiceReference<?> service : services){
-				result.add("INSTANCE|"+service.getProperty("service.pid"));		
+			for (ServiceReference<?> service : services) {
+				result.add("INSTANCE|" + service.getProperty("service.pid"));
 			}
 		} catch (InvalidSyntaxException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		return result;
+	}
+	
+	private List<String> getEmittersAndConsumers(){
+		ArrayList<String> result = new ArrayList<String>();
+		
+		try {
+			Collection<ServiceReference<WireEmitter>> emitters = m_ctx.getBundleContext().getServiceReferences(WireEmitter.class, null);
+			for (ServiceReference<WireEmitter> service : emitters) {
+				result.add(service.getProperty("service.pid").toString());
+			}
+			Collection<ServiceReference<WireReceiver>> consumers = m_ctx.getBundleContext().getServiceReferences(WireReceiver.class, null);
+			for (ServiceReference<WireReceiver> service : consumers) {
+				result.add(service.getProperty("service.pid").toString());
+			}
+		} catch (InvalidSyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
+		
 	}
 
 }
