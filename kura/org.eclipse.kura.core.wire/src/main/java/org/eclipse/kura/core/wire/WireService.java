@@ -1,6 +1,7 @@
 package org.eclipse.kura.core.wire;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -9,10 +10,21 @@ import java.util.Set;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.ComponentConfiguration;
-import org.eclipse.kura.configuration.ConfigurableComponent;
 import org.eclipse.kura.configuration.ConfigurationCallback;
 import org.eclipse.kura.configuration.ConfigurationService;
+import org.eclipse.kura.configuration.SelfConfiguringComponent;
+import org.eclipse.kura.core.configuration.ComponentConfigurationImpl;
+import org.eclipse.kura.core.configuration.metatype.Tad;
+import org.eclipse.kura.core.configuration.metatype.Tocd;
+import org.eclipse.kura.core.configuration.metatype.Toption;
+import org.eclipse.kura.core.configuration.metatype.Tscalar;
+import org.eclipse.kura.wire.WireEmitter;
+import org.eclipse.kura.wire.WireReceiver;
 import org.json.JSONException;
+import org.osgi.framework.Bundle;
+import org.osgi.framework.InvalidSyntaxException;
+import org.osgi.framework.ServiceReference;
+import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.wireadmin.Wire;
@@ -20,11 +32,12 @@ import org.osgi.service.wireadmin.WireAdmin;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class WireService implements ConfigurableComponent, ConfigurationCallback {
+public class WireService implements SelfConfiguringComponent, ConfigurationCallback {
 	private static final Logger s_logger = LoggerFactory.getLogger(WireService.class);
 
 	private static final String PROP_PRODUCER_PID = "wireadmin.producer.pid";
 	private static final String PROP_CONSUMER_PID = "wireadmin.consumer.pid";
+	private static final String PROP_PID = "org.eclipse.kura.core.wire.WireService";
 
 	private ComponentContext m_ctx;
 
@@ -101,24 +114,24 @@ public class WireService implements ConfigurableComponent, ConfigurationCallback
 			throw new ComponentException(jsone);
 		}
 
-//		initDebugData();
+		// initDebugData();
 
 	}
 
 	private void initDebugData() {
-				
+
 		try {
 			all_wires_pids = new HashSet<String>();
 			all_wires_pids.add("org.eclipse.kura.core.wire.WireService");
 
-			m_cloudPubPid = createComponentAndWire("org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher");
+			m_cloudPubPid = createComponent("org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher");
 
-			String dbStorePubPid = createComponentAndWire("org.eclipse.kura.core.wire.store.DbWireRecordStore");
-			
-			String dbRecordFilterPubPid = createComponentAndWire("org.eclipse.kura.core.wire.store.DbWireRecordFilter");
+			String dbStorePubPid = createComponent("org.eclipse.kura.core.wire.store.DbWireRecordStore");
 
-			String exampleDevicePubPid = createComponentAndWire("org.eclipse.kura.example.wire.device.DeviceExample");
-			
+			String dbRecordFilterPubPid = createComponent("org.eclipse.kura.core.wire.store.DbWireRecordFilter");
+
+			String exampleDevicePubPid = createComponent("org.eclipse.kura.example.wire.device.DeviceExample");
+
 			String heaterPid = "org.eclipse.kura.demo.heater.Heater";
 			// Wire wire = m_wireAdmin.createWire(heaterPid, m_cloudPubPid,
 			// null);
@@ -141,6 +154,7 @@ public class WireService implements ConfigurableComponent, ConfigurationCallback
 			}
 
 			configurationCallbackFilter = all_wires_pids.toArray(new String[] {});
+
 			shouldPersist = true;
 		} catch (Exception e2) {
 			// TODO Auto-generated catch block
@@ -148,31 +162,57 @@ public class WireService implements ConfigurableComponent, ConfigurationCallback
 		}
 
 	}
-	
-	private Wire createNewWire(String producerPid, String consumerPid){
+
+	private Wire createNewWire(String producerPid, String consumerPid) {
 		Wire wire1 = m_wireAdmin.createWire(producerPid, consumerPid, null);
 		s_logger.info("Created Wire between {} and {}.", producerPid, consumerPid);
 		s_logger.info("Wire connected status: {}", wire1.isConnected());
 		return wire1;
 	}
-	
-	private String createComponentAndWire(String factoryPid){
+
+	private String createComponent(String factoryPid) {
 		String newPid = null;
 		try {
 			ComponentConfiguration compConfig;
 			compConfig = m_configService.getComponentDefaultConfiguration(factoryPid);
 			newPid = m_configService.createComponent(factoryPid, compConfig.getConfigurationProperties());
 			all_wires_pids.add(newPid);
-			s_logger.info("Created {} instance with pid {}", factoryPid , newPid);			
-		}catch(Exception ex){
-			
+			s_logger.info("Created {} instance with pid {}", factoryPid, newPid);
+		} catch (Exception ex) {
+
 		}
 		return newPid;
 	}
 
-
 	public void updated(Map<String, Object> properties) {
 		s_logger.info("updated...: " + properties);
+
+		for (String s : properties.keySet()) {
+			System.out.println(s + " = " + properties.get(s).toString());
+		}
+		Object emitterPid = properties.get("emitter.pids");
+		Object consumerPid = properties.get("consumer.pids");
+
+		if (emitterPid != null && consumerPid != null) {
+			String emitterString = createComponentFromProperty((String)emitterPid);
+			String consumerString = createComponentFromProperty((String)consumerPid);
+			createNewWire(emitterString, consumerString);
+
+			WireConfiguration wc = new WireConfiguration(emitterString, consumerString, null);
+			m_wireConfig.add(wc);
+			
+			persistWires();
+		}
+
+	}
+	
+	private String createComponentFromProperty(String value){
+		String[] tokens = value.split("\\|");
+		if(tokens[0].equals("FACTORY")){
+			return createComponent(tokens[1]);
+		}else{
+			return tokens[1];
+		}
 	}
 
 	protected void deactivate(ComponentContext componentContext) {
@@ -198,8 +238,8 @@ public class WireService implements ConfigurableComponent, ConfigurationCallback
 		Map<String, String> multitonsMap = m_configService.getMultitonPidsMap();
 
 		all_wires_pids.add("org.eclipse.kura.core.wire.WireService");
-		configurationCallbackFilter = all_wires_pids.toArray(new String[]{});
-		
+		configurationCallbackFilter = all_wires_pids.toArray(new String[] {});
+
 		for (WireConfiguration conf : m_options.getWireConfigurations()) {
 			String producer = conf.getProducerPid();
 			try {
@@ -280,6 +320,139 @@ public class WireService implements ConfigurableComponent, ConfigurationCallback
 	@Override
 	public String[] getFilter() {
 		return configurationCallbackFilter;
+	}
+
+	@Override
+	public ComponentConfiguration getConfiguration() throws KuraException {
+
+		Tocd WiresOCD = new Tocd();
+		WiresOCD.setId("WireService");
+		WiresOCD.setName("Wire Service");
+		WiresOCD.setDescription("Create a new Wire");
+		Tad jsonAD = new Tad();
+		jsonAD.setId("wires");
+		jsonAD.setName("wires");
+		jsonAD.setType(Tscalar.STRING);
+		jsonAD.setCardinality(1);
+		jsonAD.setRequired(true);
+		jsonAD.setDefault("[]");
+		jsonAD.setDescription("JSON description of a wire. The format has a producer PID, a consumer PID and, optionally, a set of properties for the wire.");
+		// WiresOCD.addAD(jsonAD);
+
+		// Create an option element for each producer factory
+		ArrayList<String> emittersOptions = new ArrayList<String>();
+		Set<String> factoryPids = m_configService.getComponentFactoryPids();
+
+		for (String factoryPid : factoryPids) {
+			emittersOptions.addAll(searchForInterface(factoryPid, WireEmitter.class));
+		}
+
+		Tad emitterTad = new Tad();
+		emitterTad.setId("emitter.pids");
+		emitterTad.setName("emitter.pids");
+		emitterTad.setType(Tscalar.STRING);
+		emitterTad.setCardinality(0);
+		emitterTad.setRequired(true);
+		StringBuilder sb = new StringBuilder();
+		for (String emitterOption : emittersOptions) {
+			Toption opt = new Toption();
+			opt.setLabel(emitterOption);
+			opt.setValue(emitterOption);
+			emitterTad.getOption().add(opt);
+			sb.append(" ,");
+		}
+		emitterTad.setDefault(sb.toString());
+		emitterTad.setDescription("Choose a WireEmitter");
+		WiresOCD.addAD(emitterTad);
+
+		// Create an option element for each producer factory
+		ArrayList<String> consumersOptions = new ArrayList<String>();
+
+		
+		for (String factoryPid : factoryPids) {
+			consumersOptions.addAll(searchForInterface(factoryPid, WireReceiver.class));
+		}
+
+		Tad consumerTad = new Tad();
+		consumerTad.setId("consumer.pids");
+		consumerTad.setName("consumer.pids");
+		consumerTad.setType(Tscalar.STRING);
+		consumerTad.setCardinality(0);
+		consumerTad.setRequired(true);
+		sb = new StringBuilder();
+		for (String consumerOption : consumersOptions) {
+			Toption opt = new Toption();
+			opt.setLabel(consumerOption);
+			opt.setValue(consumerOption);
+			consumerTad.getOption().add(opt);
+			sb.append(" ,");
+		}
+		consumerTad.setDefault(sb.toString());
+		sb = new StringBuilder("Choose a WireConsumer<br /><br /><b>Active wires:</b><br />");
+
+		sb.append("<table style=\"width:100%; border: 1px solid black;\">");
+
+		sb.append("<tr><td><b>Emitter</b></td><td><b>Consumer</b></td></tr>");
+
+		for (WireConfiguration wc : m_wireConfig) {
+			sb.append("<tr><td>").append(wc.getProducerPid()).append("</td><td>").append(wc.getConsumerPid()).append("</td></tr>");
+		}
+
+		sb.append("</table>");
+		consumerTad.setDescription(sb.toString());
+		WiresOCD.addAD(consumerTad);
+
+		try {
+			m_properties = new HashMap<String, Object>();
+			m_properties.put("wires", m_options.toJsonString());
+		} catch (JSONException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+		ComponentConfigurationImpl cc = new ComponentConfigurationImpl(PROP_PID, WiresOCD, m_properties);
+		return cc;
+	}
+
+	private List<String> searchForInterface(String factoryPid, Class iface) {
+		ArrayList<String> result = new ArrayList<String>();
+		// Iterate through the bundles
+		for (Bundle b : m_ctx.getBundleContext().getBundles()) {
+			// Search for a possible candidate for the factoryPid
+			if (factoryPid.startsWith(b.getSymbolicName())) {
+				// Try instantiating the factory. If it fails, move on to next
+				// iteration
+				try {
+					ClassLoader cl = b.adapt(BundleWiring.class).getClassLoader();
+					Class<?> clazz = Class.forName(factoryPid, false, cl);
+					// If it doesn't fail introspect for the interface
+					if (iface.isAssignableFrom(clazz)) {
+						// Found a class implementing the interface.
+						result.add("FACTORY|"+factoryPid);
+					} else {
+						// Found the class, but it doesn't implement the
+						// interface.
+						// Probably another multiton component.
+						break;
+					}
+				} catch (ClassNotFoundException e) {
+					// Do nothing. Wrong bundle or error.
+					// Should we log something?
+				}
+			}
+		}
+		
+		//After the factories, iterate through available services implementing the passed interface
+		try {
+			Collection<ServiceReference<?>> services = m_ctx.getBundleContext().getServiceReferences(iface, null);
+			for(ServiceReference<?> service : services){
+				result.add("INSTANCE|"+service.getProperty("service.pid"));		
+			}
+		} catch (InvalidSyntaxException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return result;
 	}
 
 }

@@ -28,7 +28,6 @@ public class DeviceExample implements Device, ConfigurableComponent {
 			.getLogger(DeviceExample.class);
 
 	private DriverExample m_device_driver = new DriverExample();
-	private static final String PID = "Dirver example";
 
 	private HashMap<String, String> mapping = new HashMap<String, String>();
 
@@ -37,6 +36,8 @@ public class DeviceExample implements Device, ConfigurableComponent {
 	private static final String FIELD_3_NAME = "String data";
 
 	private static final String PROP_SAMPLING_RATE = "sample.rate";
+	
+	private ComponentContext m_ctx;
 
 	private WireSupport m_wireSupport;
 
@@ -87,6 +88,7 @@ public class DeviceExample implements Device, ConfigurableComponent {
 
 	protected void activate(ComponentContext ctx, Map<String, Object> properties) {
 		s_logger.info("Activating example device...");
+		m_ctx = ctx;
 		m_properties = properties;
 
 		m_pollingHandle = m_pollingExecutor.submit(m_runnable);
@@ -116,7 +118,8 @@ public class DeviceExample implements Device, ConfigurableComponent {
 
 	@Override
 	public String getEmitterPid() {
-		return PID;
+//		return (String) m_ctx.getProperties().get("service.pid");
+		return "Device Example";
 	}
 
 	@Override

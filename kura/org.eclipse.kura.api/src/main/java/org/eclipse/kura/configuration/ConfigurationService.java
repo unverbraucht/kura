@@ -61,12 +61,12 @@ public interface ConfigurationService
 	public ComponentConfiguration getComponentDefaultConfiguration(String factoryPid) throws KuraException;
 	
 	/**
-	 * Returns the OCD with default values for the components built through the specified factoryPid.
+	 * Returns the PID of a new component created through the specified factoryPid.
 	 */
 	public String createComponent(String factoryPid, Map<String,Object> properties) throws KuraException;
 
 	/**
-	 * Returns the OCD with default values for the components built through the specified factoryPid.
+	 * Deletes the specified component.
 	 */
 	public void deleteComponent(String pid) throws KuraException;
 
