@@ -1,5 +1,6 @@
 package org.eclipse.kura.core.wire;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -18,6 +19,7 @@ import org.eclipse.kura.configuration.ConfigurationService;
 import org.eclipse.kura.configuration.SelfConfiguringComponent;
 import org.eclipse.kura.core.configuration.ComponentConfigurationImpl;
 import org.eclipse.kura.core.configuration.metatype.Tad;
+import org.eclipse.kura.core.configuration.metatype.Ticon;
 import org.eclipse.kura.core.configuration.metatype.Tocd;
 import org.eclipse.kura.core.configuration.metatype.Toption;
 import org.eclipse.kura.core.configuration.metatype.Tscalar;
@@ -189,59 +191,64 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 	public void updated(Map<String, Object> properties) {
 		s_logger.info("updated...: " + properties);
-
-		for (String s : properties.keySet()) {
-			System.out.println(s + " = " + properties.get(s).toString());
-		}
-		Object emitterPid = properties.get("emitter.pids");
-		Object consumerPid = properties.get("consumer.pids");
-
-		if (emitterPid != null && consumerPid != null) {
-			if (!emitterPid.toString().equals("NONE") && !consumerPid.toString().equals("NONE")) {
-				String emitterString = createComponentFromProperty(emitterPid.toString());
-				String consumerString = createComponentFromProperty(consumerPid.toString());
-				createNewWire(emitterString, consumerString);
-
-				WireConfiguration wc = new WireConfiguration(emitterString, consumerString, null);
-				m_wireConfig.add(wc);
-
-				persistWires();
-			}
-		}
-
-		Object wiresDelete = properties.get("delete.wires");
-		if (wiresDelete != null) {
-			if (!wiresDelete.toString().equals("NONE")) {
-				int index = Integer.valueOf(wiresDelete.toString());
-				WireConfiguration wc = m_wireConfig.get(index);
-				removeWire(wc);
-
-				persistWires();
-			}
-		}
 		
-		Object instancesDelete = properties.get("delete.instances");
-		if(instancesDelete != null){
-			if(!instancesDelete.toString().equals("NONE")){
-				//First delete the wires
-				WireConfiguration[] copy = m_wireConfig.toArray(new WireConfiguration[]{});
-				for(WireConfiguration wc : copy){
-					if(wc.getProducerPid().equals(instancesDelete.toString()) ||
-					   wc.getConsumerPid().equals(instancesDelete.toString())){
-						removeWire(wc);
-					}
-				}
-				//Then delete the instance
-				try {
-					m_configService.deleteComponent(instancesDelete.toString());
-				} catch (KuraException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-				persistWires();
-			}
-		}
+		
+		try{  //Avoid reiterate calls to update. TODO: Remove in final version
 
+			for (String s : properties.keySet()) {
+				System.out.println(s + " = " + properties.get(s).toString());
+			}
+			Object emitterPid = properties.get("emitter.pids");
+			Object consumerPid = properties.get("consumer.pids");
+	
+			if (emitterPid != null && consumerPid != null) {
+				if (!emitterPid.toString().equals("NONE") && !consumerPid.toString().equals("NONE")) {
+					String emitterString = createComponentFromProperty(emitterPid.toString());
+					String consumerString = createComponentFromProperty(consumerPid.toString());
+					createNewWire(emitterString, consumerString);
+	
+					WireConfiguration wc = new WireConfiguration(emitterString, consumerString, null);
+					m_wireConfig.add(wc);
+	
+					persistWires();
+				}
+			}
+	
+			Object wiresDelete = properties.get("delete.wires");
+			if (wiresDelete != null) {
+				if (!wiresDelete.toString().equals("NONE")) {
+					int index = Integer.valueOf(wiresDelete.toString());
+					WireConfiguration wc = m_wireConfig.get(index);
+					removeWire(wc);
+	
+					persistWires();
+				}
+			}
+			
+			Object instancesDelete = properties.get("delete.instances");
+			if(instancesDelete != null){
+				if(!instancesDelete.toString().equals("NONE")){
+					//First delete the wires
+					WireConfiguration[] copy = m_wireConfig.toArray(new WireConfiguration[]{});
+					for(WireConfiguration wc : copy){
+						if(wc.getProducerPid().equals(instancesDelete.toString()) ||
+						   wc.getConsumerPid().equals(instancesDelete.toString())){
+							removeWire(wc);
+						}
+					}
+					//Then delete the instance
+					try {
+						m_configService.deleteComponent(instancesDelete.toString());
+					} catch (KuraException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+					persistWires();
+				}
+			}
+		}catch(Exception ex){
+			s_logger.error("Error during WireService update! Something went wrong...", ex);
+		}
 	}
 
 	private String createComponentFromProperty(String value) {
@@ -386,6 +393,15 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		WiresOCD.setId("WireService");
 		WiresOCD.setName("Wire Service");
 		WiresOCD.setDescription("Create a new Wire");
+		
+		
+		// Icon loading doesn't work for SelfConfiguringComponents
+		
+		// Ticon icon = new Ticon();
+		// icon.setResource("OSGI-INF/chart.png");
+		// icon.setSize(new BigInteger("32"));
+		// WiresOCD.setIcon(icon);
+		
 		Tad jsonAD = new Tad();
 		jsonAD.setId("wires");
 		jsonAD.setName("wires");
@@ -409,7 +425,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		emitterTad.setName("emitter.pids");
 		emitterTad.setType(Tscalar.STRING);
 		emitterTad.setCardinality(0);
-		emitterTad.setRequired(false);
+		emitterTad.setRequired(true);
 		Toption defaultOpt = new Toption();
 		defaultOpt.setLabel("No new multiton");
 		defaultOpt.setValue("NONE");
@@ -438,7 +454,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		consumerTad.setName("consumer.pids");
 		consumerTad.setType(Tscalar.STRING);
 		consumerTad.setCardinality(0);
-		consumerTad.setRequired(false);
+		consumerTad.setRequired(true);
 		consumerTad.getOption().add(defaultOpt);
 		sb = new StringBuilder();
 		for (String consumerOption : consumersOptions) {
@@ -469,7 +485,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		wiresTad.setType(Tscalar.STRING);
 		wiresTad.setCardinality(0);
 		wiresTad.setRequired(true);
-		wiresTad.setDefault("Do not delete any wire");
+		wiresTad.setDefault("NONE");
 		for (int i = 0; i < m_wireConfig.size(); i++) {
 			WireConfiguration wc = m_wireConfig.get(i);
 			Toption o = new Toption();
@@ -490,7 +506,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		servicesTad.setType(Tscalar.STRING);
 		servicesTad.setCardinality(0);
 		servicesTad.setRequired(true);
-		servicesTad.setDefault("Do not delete any instance");
+		servicesTad.setDefault("NONE");
 		Toption opt = new Toption();
 		opt.setLabel("Do not delete any instance");
 		opt.setValue("NONE");
@@ -509,6 +525,10 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		try {
 			m_properties = new HashMap<String, Object>();
 			m_properties.put("wires", m_options.toJsonString());
+			m_properties.put("delete.instances", "NONE");
+			m_properties.put("delete.wires", "NONE");
+			m_properties.put("consumer.pids", "NONE");
+			m_properties.put("emitter.pids", "NONE");
 		} catch (JSONException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
