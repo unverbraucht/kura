@@ -8,6 +8,7 @@ public class WireConfiguration
 	private String m_producerPid;
 	private String m_consumerPid;
 	private String m_filter;
+	private boolean m_created = false;
 	
 	WireConfiguration(String producerPid, 
 					  String consumerPid,
@@ -49,5 +50,13 @@ public class WireConfiguration
 
 	public String getFilter() {
 		return m_filter;
+	}
+	
+	public boolean isCreated(){
+		return m_created;
+	}
+	
+	public void setCreated(boolean created){
+		m_created = created;
 	}
 }

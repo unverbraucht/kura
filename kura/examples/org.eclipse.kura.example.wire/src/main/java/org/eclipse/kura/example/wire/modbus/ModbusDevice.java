@@ -5,9 +5,9 @@ import java.util.Properties;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.ConfigurableComponent;
-import org.eclipse.kura.device.Device;
-import org.eclipse.kura.device.DeviceConnection;
 import org.eclipse.kura.protocol.modbus.ModbusProtocolDeviceService;
+import org.eclipse.kura.wire.Device;
+import org.eclipse.kura.wire.DeviceConnection;
 import org.eclipse.kura.wire.WireField;
 import org.eclipse.kura.wire.WireRecord;
 import org.eclipse.kura.wire.WireSupport;

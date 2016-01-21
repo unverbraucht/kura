@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -16,7 +17,7 @@ public class WireServiceOptions
 {
 	public static final String CONF_WIRES = "wires";
 	
-	private List<WireConfiguration> m_wireConfigurations;
+	private static List<WireConfiguration> m_wireConfigurations;
 	
 	private WireServiceOptions(List<WireConfiguration> confs) {	
 		m_wireConfigurations = confs;
@@ -24,6 +25,9 @@ public class WireServiceOptions
 	
 	
 	public List<WireConfiguration> getWireConfigurations() {
+		System.err.println("***************************");
+		System.err.println(m_wireConfigurations.size());
+		System.err.println("***************************");
 		return m_wireConfigurations;
 	}
 	
@@ -31,7 +35,7 @@ public class WireServiceOptions
 	public static WireServiceOptions newInstance(Map<String,Object> properties) 
 		throws JSONException 
 	{
-		List<WireConfiguration> wireConfs = new ArrayList<WireConfiguration>();
+		List<WireConfiguration> wireConfs = new CopyOnWriteArrayList<WireConfiguration>();
 		Object objWires = properties.get(CONF_WIRES);
 		if (objWires instanceof String) {
 

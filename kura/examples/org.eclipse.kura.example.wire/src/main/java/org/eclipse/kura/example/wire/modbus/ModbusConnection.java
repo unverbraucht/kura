@@ -5,9 +5,9 @@ import java.util.Properties;
 import org.eclipse.kura.KuraConnectionStatus;
 import org.eclipse.kura.KuraErrorCode;
 import org.eclipse.kura.KuraException;
-import org.eclipse.kura.device.DeviceConnection;
 import org.eclipse.kura.protocol.modbus.ModbusProtocolDeviceService;
 import org.eclipse.kura.protocol.modbus.ModbusProtocolException;
+import org.eclipse.kura.wire.DeviceConnection;
 
 public class ModbusConnection implements DeviceConnection {
 

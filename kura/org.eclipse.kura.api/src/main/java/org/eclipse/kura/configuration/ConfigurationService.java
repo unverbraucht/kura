@@ -71,9 +71,12 @@ public interface ConfigurationService
 	public void deleteComponent(String pid) throws KuraException;
 
 	/**
-	 * Returns a map of pid values. Each couple is a link between the old service.pid of a multiton component, and its current one. 
+	 * Returns the current Pid for the multiton instance whose Pid was stored in a snapshot.
+	 * Can return itself if the instance Pid has not changed for some reason.
+	 * @param storedPid Pid previously assigned to this instance in a previous configuration
+	 * @return the new Pid as returned by the Configuration Service while instantiating the component
 	 */
-	public Map<String, String> getMultitonPidsMap();
+	public String getUpdatedMultitonPid(String storedPid);
 	
 	/**
 	 * Adds a ConfigurationCallback to track component registration. A string filter can be specified for a specific pid on each callback. 

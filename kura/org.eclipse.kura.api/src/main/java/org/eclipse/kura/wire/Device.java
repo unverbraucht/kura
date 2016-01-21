@@ -1,9 +1,6 @@
-package org.eclipse.kura.device;
+package org.eclipse.kura.wire;
 
 import org.eclipse.kura.KuraException;
-import org.eclipse.kura.wire.WireEmitter;
-import org.eclipse.kura.wire.WireField;
-import org.eclipse.kura.wire.WireRecord;
 
 public interface Device extends WireEmitter{
 	

@@ -4,7 +4,7 @@ import java.util.HashMap;
 import java.util.Random;
 
 import org.eclipse.kura.KuraException;
-import org.eclipse.kura.device.DeviceConnection;
+import org.eclipse.kura.wire.DeviceConnection;
 
 public class DriverExample implements DeviceConnection {
 

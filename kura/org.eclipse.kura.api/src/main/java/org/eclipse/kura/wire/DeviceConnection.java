@@ -1,4 +1,4 @@
-package org.eclipse.kura.device;
+package org.eclipse.kura.wire;
 
 import org.eclipse.kura.KuraException;
 

@@ -1,16 +1,16 @@
 package org.eclipse.kura.core.wire;
 
-import java.math.BigInteger;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
-
-import javax.swing.event.ListSelectionEvent;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.ComponentConfiguration;
@@ -19,17 +19,13 @@ import org.eclipse.kura.configuration.ConfigurationService;
 import org.eclipse.kura.configuration.SelfConfiguringComponent;
 import org.eclipse.kura.core.configuration.ComponentConfigurationImpl;
 import org.eclipse.kura.core.configuration.metatype.Tad;
-import org.eclipse.kura.core.configuration.metatype.Ticon;
 import org.eclipse.kura.core.configuration.metatype.Tocd;
 import org.eclipse.kura.core.configuration.metatype.Toption;
 import org.eclipse.kura.core.configuration.metatype.Tscalar;
 import org.eclipse.kura.wire.WireEmitter;
 import org.eclipse.kura.wire.WireReceiver;
 import org.json.JSONException;
-import org.osgi.framework.Bundle;
 import org.osgi.framework.InvalidSyntaxException;
-import org.osgi.framework.ServiceReference;
-import org.osgi.framework.wiring.BundleWiring;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.component.ComponentException;
 import org.osgi.service.wireadmin.Wire;
@@ -48,21 +44,15 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 	private WireAdmin m_wireAdmin;
 	private ConfigurationService m_configService;
-	private WireServiceOptions m_options;
-
-	// Debug variables
-	private String m_cloudPubPid;
-	private String m_devExamplePid;
-	private String m_devExamplePid2;
-	private String m_modbusExamplePid;
+	private static WireServiceOptions m_options;
 
 	private List<WireConfiguration> m_wireConfig;
 	private Map<String, Object> m_properties;
 
-	private boolean shouldPersist = false;
+	// private boolean shouldPersist = false;
 
-	private String[] configurationCallbackFilter;
-	private Set<String> all_wires_pids;
+	private List<String> m_wireEmitters;
+	private List<String> m_wireReceivers;
 
 	// ----------------------------------------------------------------
 	//
@@ -72,7 +62,8 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 	public WireService() {
 		m_wireConfig = new ArrayList<WireConfiguration>();
-		all_wires_pids = new HashSet<String>();
+		m_wireEmitters = new ArrayList<String>();
+		m_wireReceivers = new ArrayList<String>();
 	}
 
 	public void setWireAdmin(WireAdmin wireAdmin) {
@@ -110,13 +101,31 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 		// save the bundle context and the properties
 		m_ctx = componentContext;
+
 		try {
 			m_configService.addComponentRegistrationCallback(this);
+
+			List<ComponentConfiguration> confs = m_configService.getComponentConfigurations();
+			System.err.println("--->STEP 0: Component configurations already loaded");
+			for (ComponentConfiguration conf : confs) {
+				System.err.println("            " + conf.getPid());
+				if (WireUtils.isEmitter(m_ctx, conf.getPid())) {
+					m_wireEmitters.add(conf.getPid());
+				}
+				if (WireUtils.isReceiver(m_ctx, conf.getPid())) {
+					m_wireReceivers.add(conf.getPid());
+				}
+				
+			}
+
 			m_options = WireServiceOptions.newInstance(properties);
 			m_properties = properties;
 			createWires();
 		} catch (JSONException jsone) {
 			throw new ComponentException(jsone);
+		} catch (KuraException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
 
 		// initDebugData();
@@ -126,10 +135,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 	private void initDebugData() {
 
 		try {
-			all_wires_pids = new HashSet<String>();
-			all_wires_pids.add("org.eclipse.kura.core.wire.WireService");
-
-			m_cloudPubPid = createComponent("org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher");
+			String m_cloudPubPid = createComponent("org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher");
 
 			String dbStorePubPid = createComponent("org.eclipse.kura.core.wire.store.DbWireRecordStore");
 
@@ -158,9 +164,6 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 				m_wireConfig.add(wc);
 			}
 
-			configurationCallbackFilter = all_wires_pids.toArray(new String[] {});
-
-			shouldPersist = true;
 		} catch (Exception e2) {
 			// TODO Auto-generated catch block
 			e2.printStackTrace();
@@ -181,8 +184,30 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 			ComponentConfiguration compConfig;
 			compConfig = m_configService.getComponentDefaultConfiguration(factoryPid);
 			newPid = m_configService.createComponent(factoryPid, compConfig.getConfigurationProperties());
-			all_wires_pids.add(newPid);
-			s_logger.info("Created {} instance with pid {}", factoryPid, newPid);
+			final String passedPid = newPid;
+			m_configService.addComponentRegistrationCallback(new ConfigurationCallback() {
+				
+				@Override
+				public String[] getFilter() {
+					return new String[]{passedPid};
+				}
+				
+				@Override
+				public void componentUnregistered(String pid) {
+				}
+				
+				@Override
+				public void componentRegistered(String pid) {
+					try {
+						System.err.println("Started tracking "+pid+". Saving snapshot.");
+						m_configService.snapshot();
+					} catch (KuraException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}					
+					m_configService.removeComponentRegistrationCallback(this);
+				}
+			});
 		} catch (Exception ex) {
 
 		}
@@ -191,62 +216,62 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 	public void updated(Map<String, Object> properties) {
 		s_logger.info("updated...: " + properties);
-		
-		
-		try{  //Avoid reiterate calls to update. TODO: Remove in final version
+
+		try { // Avoid reiterate calls to update. TODO: Remove in final version
 
 			for (String s : properties.keySet()) {
 				System.out.println(s + " = " + properties.get(s).toString());
 			}
-			Object emitterPid = properties.get("emitter.pids");
-			Object consumerPid = properties.get("consumer.pids");
-	
+			final Object emitterPid = properties.get("emitter.pids");
+			final Object consumerPid = properties.get("consumer.pids");
+
 			if (emitterPid != null && consumerPid != null) {
 				if (!emitterPid.toString().equals("NONE") && !consumerPid.toString().equals("NONE")) {
-					String emitterString = createComponentFromProperty(emitterPid.toString());
-					String consumerString = createComponentFromProperty(consumerPid.toString());
-					createNewWire(emitterString, consumerString);
-	
+					final String emitterString = createComponentFromProperty(emitterPid.toString());
+					final String consumerString = createComponentFromProperty(consumerPid.toString());
+//					createNewWire(emitterString, consumerString);
 					WireConfiguration wc = new WireConfiguration(emitterString, consumerString, null);
-					m_wireConfig.add(wc);
-	
-					persistWires();
+//					m_wireConfig.add(wc);
+					m_options.getWireConfigurations().add(wc);
+					createWires();
+					if(emitterPid.toString().startsWith("INSTANCE") && consumerPid.toString().startsWith("INSTANCE")){
+						m_configService.snapshot();
+					}
 				}
 			}
-	
+
 			Object wiresDelete = properties.get("delete.wires");
 			if (wiresDelete != null) {
 				if (!wiresDelete.toString().equals("NONE")) {
 					int index = Integer.valueOf(wiresDelete.toString());
 					WireConfiguration wc = m_wireConfig.get(index);
 					removeWire(wc);
-	
-					persistWires();
+
+					m_configService.snapshot();
 				}
 			}
-			
+
 			Object instancesDelete = properties.get("delete.instances");
-			if(instancesDelete != null){
-				if(!instancesDelete.toString().equals("NONE")){
-					//First delete the wires
-					WireConfiguration[] copy = m_wireConfig.toArray(new WireConfiguration[]{});
-					for(WireConfiguration wc : copy){
-						if(wc.getProducerPid().equals(instancesDelete.toString()) ||
-						   wc.getConsumerPid().equals(instancesDelete.toString())){
+			if (instancesDelete != null) {
+				if (!instancesDelete.toString().equals("NONE")) {
+					// First delete the wires
+					WireConfiguration[] copy = m_wireConfig.toArray(new WireConfiguration[] {});
+					for (WireConfiguration wc : copy) {
+						if (wc.getProducerPid().equals(instancesDelete.toString()) || wc.getConsumerPid().equals(instancesDelete.toString())) {
 							removeWire(wc);
 						}
 					}
-					//Then delete the instance
+					// Then delete the instance
 					try {
 						m_configService.deleteComponent(instancesDelete.toString());
 					} catch (KuraException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
 					}
-					persistWires();
+					persistWires(true);
 				}
 			}
-		}catch(Exception ex){
+		} catch (Exception ex) {
 			s_logger.error("Error during WireService update! Something went wrong...", ex);
 		}
 	}
@@ -263,6 +288,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 	protected void deactivate(ComponentContext componentContext) {
 		s_logger.info("deactivate...");
 		m_configService.removeComponentRegistrationCallback(this);
+
 	}
 
 	// ----------------------------------------------------------------
@@ -276,39 +302,65 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 	// Private methods
 	//
 	// ----------------------------------------------------------------
-	private void createWires() {
+
+	private boolean wireAlreadyCreated(String emitter, String receiver) {
+		for (WireConfiguration wc : m_wireConfig) {
+			if (wc.getProducerPid().equals(emitter) && wc.getConsumerPid().equals(receiver)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private synchronized void createWires() {
 
 		// TODO: remove existing wires?
 
-		Map<String, String> multitonsMap = m_configService.getMultitonPidsMap();
-
-		all_wires_pids.add("org.eclipse.kura.core.wire.WireService");
-		configurationCallbackFilter = all_wires_pids.toArray(new String[] {});
-
+		List<WireConfiguration> prova = new ArrayList<WireConfiguration>();
 		for (WireConfiguration conf : m_options.getWireConfigurations()) {
-			String producer = conf.getProducerPid();
-			try {
-				String p = conf.getProducerPid();
-				Object po = multitonsMap.get(p);
-				producer = po.toString();
-			} catch (Exception ex) {
+			WireConfiguration copy = new WireConfiguration(conf.getProducerPid(), conf.getConsumerPid(), conf.getFilter());
+			prova.add(copy);
+		}
+		
+		for (WireConfiguration conf : prova) {
 
+			String producer = m_configService.getUpdatedMultitonPid(conf.getProducerPid());
+			String consumer = m_configService.getUpdatedMultitonPid(conf.getConsumerPid());
+			boolean producerFound = false;
+			boolean consumerFound = false;
+
+			synchronized (m_wireEmitters) {
+				for (String s : m_wireEmitters) {
+					if (s.equals(producer)) {
+						producerFound = true;
+						break;
+					}
+				}
 			}
-			String consumer = conf.getConsumerPid();
-			try {
-				String c = conf.getConsumerPid();
-				Object co = multitonsMap.get(c);
-				consumer = co.toString();
-			} catch (Exception ex) {
 
+			synchronized (m_wireReceivers) {
+				for (String s : m_wireReceivers) {
+					if (s.equals(consumer)) {
+						consumerFound = true;
+						break;
+					}
+				}
 			}
 
-			m_wireAdmin.createWire(producer, consumer, null);
-			m_wireConfig.add(new WireConfiguration(producer, consumer, null));
+			if (producerFound && consumerFound) {
+				if (!wireAlreadyCreated(producer, consumer)) {
+					s_logger.info("Creating wire between {} and {}",producer, consumer);
+					m_wireAdmin.createWire(producer, consumer, null);
+					WireConfiguration wc = new WireConfiguration(producer, consumer, null);
+					wc.setCreated(true);
+					m_wireConfig.add(wc);
+					persistWires(false);
+				}
+			}
 		}
 	}
 
-	private void persistWires() {
+	private void persistWires(boolean shouldPersist) {
 		List<WireConfiguration> list = m_options.getWires();
 		list.clear();
 		for (WireConfiguration w : m_wireConfig) {
@@ -369,21 +421,48 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 	@Override
 	public void componentRegistered(String pid) {
-		all_wires_pids.remove(pid);
-		if (all_wires_pids.size() == 0) {
-			persistWires();
-			shouldPersist = false;
+		System.err.println("-----> STEP 1: RECEIVING CONFIGURATIONS EVENT: " + pid);
+
+		boolean flag = false;
+
+		if (WireUtils.isEmitter(m_ctx, pid)) {
+			m_wireEmitters.add(pid);
+			flag = true;
+		}
+
+		if (WireUtils.isReceiver(m_ctx, pid)) {
+			m_wireReceivers.add(pid);
+			flag = true;
+		}
+
+		if(flag){
+			createWires();
 		}
 	}
 
 	@Override
 	public void componentUnregistered(String pid) {
-		// Do nothing
-	}
+		System.err.println("-----> STEP 4: COMPONENT UNREGISTERED: " + pid);
 
+		boolean flag = false;
+
+		if (WireUtils.isEmitter(m_ctx, pid)) {
+			m_wireEmitters.remove(pid);
+			flag = true;
+		}
+
+		if (WireUtils.isReceiver(m_ctx, pid)) {
+			m_wireReceivers.remove(pid);
+			flag = true;
+		}
+
+		//REMOVE WIRES
+	}
+	
 	@Override
 	public String[] getFilter() {
-		return configurationCallbackFilter;
+		// return configurationCallbackFilter;
+		return null;
 	}
 
 	@Override
@@ -393,15 +472,14 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		WiresOCD.setId("WireService");
 		WiresOCD.setName("Wire Service");
 		WiresOCD.setDescription("Create a new Wire");
-		
-		
+
 		// Icon loading doesn't work for SelfConfiguringComponents
-		
+
 		// Ticon icon = new Ticon();
 		// icon.setResource("OSGI-INF/chart.png");
 		// icon.setSize(new BigInteger("32"));
 		// WiresOCD.setIcon(icon);
-		
+
 		Tad jsonAD = new Tad();
 		jsonAD.setId("wires");
 		jsonAD.setName("wires");
@@ -413,11 +491,12 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		// WiresOCD.addAD(jsonAD);
 
 		// Create an option element for each producer factory
+
 		ArrayList<String> emittersOptions = new ArrayList<String>();
 		Set<String> factoryPids = m_configService.getComponentFactoryPids();
 
 		for (String factoryPid : factoryPids) {
-			emittersOptions.addAll(searchForInterface(factoryPid, WireEmitter.class));
+			emittersOptions.addAll(WireUtils.getFactoriesAndInstances(m_ctx, factoryPid, WireEmitter.class));
 		}
 
 		Tad emitterTad = new Tad();
@@ -446,7 +525,7 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		ArrayList<String> consumersOptions = new ArrayList<String>();
 
 		for (String factoryPid : factoryPids) {
-			consumersOptions.addAll(searchForInterface(factoryPid, WireReceiver.class));
+			consumersOptions.addAll(WireUtils.getFactoriesAndInstances(m_ctx, factoryPid, WireReceiver.class));
 		}
 
 		Tad consumerTad = new Tad();
@@ -512,13 +591,13 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 		opt.setValue("NONE");
 		servicesTad.getOption().add(opt);
 
-		for(String s : getEmittersAndConsumers()){
+		for (String s : WireUtils.getEmittersAndConsumers(m_ctx)) {
 			o = new Toption();
 			o.setLabel(s);
 			o.setValue(s);
 			servicesTad.getOption().add(o);
 		}
-		
+
 		servicesTad.setDescription("Select an Instance from the list. The instance and all connected Wires will be deledet when submitting the changes.");
 		WiresOCD.addAD(servicesTad);
 
@@ -536,68 +615,6 @@ public class WireService implements SelfConfiguringComponent, ConfigurationCallb
 
 		ComponentConfigurationImpl cc = new ComponentConfigurationImpl(PROP_PID, WiresOCD, m_properties);
 		return cc;
-	}
-
-	private List<String> searchForInterface(String factoryPid, Class iface) {
-		ArrayList<String> result = new ArrayList<String>();
-		// Iterate through the bundles
-		for (Bundle b : m_ctx.getBundleContext().getBundles()) {
-			// Search for a possible candidate for the factoryPid
-			if (factoryPid.startsWith(b.getSymbolicName())) {
-				// Try instantiating the factory. If it fails, move on to next
-				// iteration
-				try {
-					ClassLoader cl = b.adapt(BundleWiring.class).getClassLoader();
-					Class<?> clazz = Class.forName(factoryPid, false, cl);
-					// If it doesn't fail introspect for the interface
-					if (iface.isAssignableFrom(clazz)) {
-						// Found a class implementing the interface.
-						result.add("FACTORY|" + factoryPid);
-					} else {
-						// Found the class, but it doesn't implement the
-						// interface.
-						// Probably another multiton component.
-						break;
-					}
-				} catch (ClassNotFoundException e) {
-					// Do nothing. Wrong bundle or error.
-					// Should we log something?
-				}
-			}
-		}
-
-		// After the factories, iterate through available services implementing
-		// the passed interface
-		try {
-			Collection<ServiceReference<?>> services = m_ctx.getBundleContext().getServiceReferences(iface, null);
-			for (ServiceReference<?> service : services) {
-				result.add("INSTANCE|" + service.getProperty("service.pid"));
-			}
-		} catch (InvalidSyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return result;
-	}
-	
-	private List<String> getEmittersAndConsumers(){
-		ArrayList<String> result = new ArrayList<String>();
-		
-		try {
-			Collection<ServiceReference<WireEmitter>> emitters = m_ctx.getBundleContext().getServiceReferences(WireEmitter.class, null);
-			for (ServiceReference<WireEmitter> service : emitters) {
-				result.add(service.getProperty("service.pid").toString());
-			}
-			Collection<ServiceReference<WireReceiver>> consumers = m_ctx.getBundleContext().getServiceReferences(WireReceiver.class, null);
-			for (ServiceReference<WireReceiver> service : consumers) {
-				result.add(service.getProperty("service.pid").toString());
-			}
-		} catch (InvalidSyntaxException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return result;
-		
 	}
 
 }
