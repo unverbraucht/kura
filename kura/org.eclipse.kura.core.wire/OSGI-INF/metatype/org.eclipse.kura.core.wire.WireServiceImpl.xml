@@ -13,7 +13,7 @@
 
 -->
 <MetaData xmlns="http://www.osgi.org/xmlns/metatype/v1.2.0" localization="en_us">
-    <OCD id="org.eclipse.kura.core.wire.WireService" 
+    <OCD id="org.eclipse.kura.core.wire.WireServiceImpl" 
          name="WireService" 
          description="WireService description">
 
@@ -29,7 +29,7 @@
             />
     </OCD>
     
-    <Designate pid="org.eclipse.kura.core.wire.WireService">
-        <Object ocdref="org.eclipse.kura.core.wire.WireService"/>
+    <Designate pid="org.eclipse.kura.core.wire.WireServiceImpl">
+        <Object ocdref="org.eclipse.kura.core.wire.WireServiceImpl"/>
     </Designate>
 </MetaData>

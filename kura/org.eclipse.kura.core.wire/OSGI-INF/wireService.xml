@@ -13,19 +13,25 @@
 
 -->
 <scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" 
-    name="org.eclipse.kura.core.wire.WireService"
+    name="org.eclipse.kura.core.wire.WireServiceImpl"
     activate="activate" 
     deactivate="deactivate" 
     modified="updated" 
     enabled="true" 
     immediate="true"
     configuration-policy="require">
-   <implementation class="org.eclipse.kura.core.wire.WireService"/>
+   <implementation class="org.eclipse.kura.core.wire.WireServiceImpl"/>
    <service>
       <provide interface="org.eclipse.kura.configuration.SelfConfiguringComponent"/>
-      <provide interface="org.eclipse.kura.core.wire.WireService"/>
+      <provide interface="org.eclipse.kura.wire.WireService"/>
    </service>
-   <property name="service.pid" value="org.eclipse.kura.core.wire.WireService"/>
+   <property name="service.pid" value="org.eclipse.kura.core.wire.WireServiceImpl"/>
+   <reference name="MultitonService" 
+              bind="setMultitonService" 
+              unbind="unsetMultitonService"
+              cardinality="1..1" 
+              policy="static" 
+              interface="org.eclipse.kura.multitons.MultitonService"/>
    <reference name="WireAdmin" 
               bind="setWireAdmin" 
               unbind="unsetWireAdmin"

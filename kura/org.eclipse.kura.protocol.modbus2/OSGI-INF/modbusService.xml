@@ -36,10 +36,10 @@
               cardinality="1..1"
               policy="static"
               interface="org.eclipse.kura.watchdog.WatchdogService"/>
-   <reference name="ConfigurationService" 
-              bind="setConfigurationService" 
-              unbind="unsetConfigurationService"
+   <reference name="MultitonService" 
+              bind="setMultitonService" 
+              unbind="unsetMultitonService"
               cardinality="1..1" 
               policy="static" 
-              interface="org.eclipse.kura.configuration.ConfigurationService"/>
+              interface="org.eclipse.kura.multitons.MultitonService"/>
 </scr:component>

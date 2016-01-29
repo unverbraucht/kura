@@ -26,5 +26,17 @@
        <provide interface="org.eclipse.kura.configuration.ConfigurableComponent"/>
    </service>
    <property name="service.pid" value="org.eclipse.kura.protocol.modbus2.impl.ModbusProtocolDeviceServiceImpl"/>
+   <reference name="ModbusService"  
+   			  cardinality="1..1" 
+   			  interface="org.eclipse.kura.protocol.modbus2.api.ModbusProtocolService"    			  
+   			  policy="static" 
+       		  bind="setModbusService" 
+   			  unbind="unsetModbusService"/>
+    <reference bind="setConnectionFactory" 
+   			  cardinality="1..1" 
+   			  interface="org.osgi.service.io.ConnectionFactory" 
+   			  name="ConnectionFactory" 
+   			  policy="static" 
+   			  unbind="unsetConnectionFactory"/>
 
 </scr:component>

@@ -4,24 +4,14 @@ import org.eclipse.kura.protocol.modbus2.api.ModbusProtocolDeviceService;
 
 public class ModbusProtocolDeviceInfo {
 	
-	private String name;
 	private String pid;
 	private ModbusProtocolDeviceService service;
 	
 	
-	public ModbusProtocolDeviceInfo(String name, String pid, ModbusProtocolDeviceService service) {
+	public ModbusProtocolDeviceInfo(String pid, ModbusProtocolDeviceService service) {
 		super();
-		this.name = name;
 		this.pid = pid;
 		this.service = service;
-	}
-	
-	public String getName() {
-		return name;
-	}
-	
-	public void setName(String name) {
-		this.name = name;
 	}
 	
 	public String getPid() {

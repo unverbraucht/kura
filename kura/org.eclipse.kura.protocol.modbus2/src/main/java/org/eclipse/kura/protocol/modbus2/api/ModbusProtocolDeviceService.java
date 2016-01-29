@@ -17,6 +17,7 @@ package org.eclipse.kura.protocol.modbus2.api;
 
 import java.util.Properties;
 
+import org.eclipse.kura.KuraException;
 import org.eclipse.kura.protocol.modbus2.ModbusCommEvent;
 import org.eclipse.kura.protocol.modbus2.ModbusProtocolException;
 
@@ -109,7 +110,7 @@ public interface ModbusProtocolDeviceService {
 	 * @throws ModbusProtocolException(INVALID_CONFIGURATION)
 	 *             unspecified problem with the configuration
 	 */
-	public void configureConnection(Properties connectionConfig)
+	public void configureConnection(ModbusProtocolProperties props)
 			throws ModbusProtocolException;
 
 	/**
@@ -136,12 +137,12 @@ public interface ModbusProtocolDeviceService {
 	 * <p>
 	 * All protocols must implement this method.
 	 * 
-	 * @throws ModbusProtocolException(INVALID_CONFIGURATION)
+	 * @throws KuraException
 	 *             this operates on the basic assumption that access to a device
 	 *             should exist, if the device is unreachable, it is interpreted
 	 *             as a failure of the configuration.
 	 */
-	public void connect() throws ModbusProtocolException;
+	public void connect() throws KuraException;
 
 	/**
 	 * attempt to disconnect from the field device. This should close any port
@@ -149,11 +150,11 @@ public interface ModbusProtocolDeviceService {
 	 * Attempting to close an already closed connection is not invalid.
 	 * <p>
 	 * All protocols must implement this method.
-	 * @throws ModbusProtocolException 
+	 * @throws KuraException 
 	 * 
 	 * @see #getConnectStatus()
 	 */
-	public void disconnect() throws ModbusProtocolException;
+	public void disconnect() throws KuraException;
 
 	/**
 	 * <b>Modbus function 01</b><br>

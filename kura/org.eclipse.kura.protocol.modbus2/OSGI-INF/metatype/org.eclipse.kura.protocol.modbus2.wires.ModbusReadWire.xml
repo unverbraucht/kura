@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+
+     All rights reserved. This program and the accompanying materials
+     are made available under the terms of the Eclipse Public License v1.0
+     which accompanies this distribution, and is available at
+     http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+      Eurotech
+
+-->
+<MetaData xmlns="http://www.osgi.org/xmlns/metatype/v1.2.0" localization="en_us">
+    <OCD id="org.eclipse.kura.protocol.modbus2.wires.ModbusReadWire"
+         name="Modbus Data Channel" 
+         description="Modbus protocol channel endpoint.">
+              
+        <AD id="instanceName"
+            name="instanceName"
+            type="String"
+            cardinality="0"
+            required="true"
+            default="instance_0"
+            description="Modbus Driver instance to use"/>
+        
+        <AD id="metricName"
+            name="metricName"
+            type="String"
+            cardinality="0"
+            required="true"
+            default="metric"
+            description="Name to be used for the value"/>
+        
+        <AD id="operation"
+            name="operation"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="0"
+            description="Modbus operation to perform">
+            <Option label="Read holding registers" value="0"/>
+            <Option label="Read input registers" value="1"/>
+            <Option label="Read discrete inputs" value="2"/>
+            <Option label="Read coils" value="3"/>
+            <Option label="Read exception status" value="4"/>
+        </AD>
+            
+        <AD id="slaveAddress"
+            name="slaveAddress"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="0"
+            description="Slave address of the modbus client"/>
+        
+        <AD id="dataAddress"
+            name="dataAddress"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="0"
+            description="Data address to read data from"/>
+        
+        <AD id="dataLength"
+            name="dataLength"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="0"
+            description="Data length"/>
+        
+        <AD id="operatingMode"
+            name="operatingMode"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="0"
+            description="Channel operating mode">
+            <Option label="Autonomous polling" value="0"/>
+            <Option label="Trigger by wire" value="1"/>
+        </AD>
+        
+        <AD id="pollingInterval"
+            name="pollingInterval"
+            type="Integer"
+            cardinality="0"
+            required="true"
+            default="10000"
+            description="Polling interval in milliseconds"/>
+        
+        </OCD>
+    <Designate pid="org.eclipse.kura.protocol.modbus2.wires.ModbusReadWire" factoryPid="org.eclipse.kura.protocol.modbus2.wires.ModbusReadWire">
+        <Object ocdref="org.eclipse.kura.protocol.modbus2.wires.ModbusReadWire"/>
+    </Designate>
+</MetaData>
