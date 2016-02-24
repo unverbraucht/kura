@@ -93,7 +93,7 @@ public class MultitonServiceImpl implements MultitonService, ServiceListener {
 	@Override
 	public boolean removeMultitonInstance(String pid) {
 		try {
-			m_configurationService.deleteComponent(pid);
+			m_configurationService.deleteConfigurableComponent(pid);
 			return true;
 		} catch (KuraException e) {
 			// TODO Auto-generated catch block
@@ -109,7 +109,7 @@ public class MultitonServiceImpl implements MultitonService, ServiceListener {
 		ComponentConfiguration compConfig;
 		try {
 			compConfig = m_configurationService.getComponentDefaultConfiguration(factoryPid);
-			newPid = m_configurationService.createComponent(factoryPid, compConfig.getConfigurationProperties());
+			newPid = m_configurationService.newConfigurableComponent(factoryPid, compConfig.getConfigurationProperties());
 		} catch (KuraException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

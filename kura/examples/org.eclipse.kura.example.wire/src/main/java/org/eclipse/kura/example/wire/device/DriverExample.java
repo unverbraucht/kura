@@ -1,24 +1,31 @@
+/**
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Eurotech
+ */
 package org.eclipse.kura.example.wire.device;
 
-import java.util.HashMap;
 import java.util.Random;
 
 import org.eclipse.kura.KuraException;
-import org.eclipse.kura.wire.DeviceConnection;
+import org.eclipse.kura.core.devices.DeviceDriver;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class DriverExample implements DeviceConnection {
-
+public class DriverExample implements DeviceDriver {
+	private static final Logger s_logger = LoggerFactory.getLogger(DriverExample.class);
 	private boolean m_connected = false;
-	
-	private HashMap<String, Object> m_values = new HashMap<String, Object>();
 	
 	private Random m_random = new Random();
 	
 	public DriverExample(){
 		//Random values
-		m_values.put("1", m_random.nextInt());
-		m_values.put("2", m_random.nextDouble());
-		m_values.put("3", String.valueOf(m_random.nextGaussian()));
 	}
 	
 	@Override
@@ -37,40 +44,24 @@ public class DriverExample implements DeviceConnection {
 	}
 
 	@Override
-	public void write(String address, Object value) throws KuraException {
-		m_values.put(address, value);
+	public String getDeviceFactoryPid() {
+		return "org.eclipse.kura.example.wire.device.DeviceExample";
 	}
-
-	@Override
-	public Object read(String address) throws KuraException {
-		if(address.equals("1")){
-			m_values.put("1", m_random.nextInt());
-		}
-		if(address.equals("2")){
-			m_values.put("2", m_random.nextDouble());
-		}
-		if(address.equals("3")){
-			m_values.put("3", String.valueOf(m_random.nextGaussian()));
-		}		
-		return m_values.get(address);
+	
+	public int readInteger(int address){
+		return m_random.nextInt();
 	}
-
-	@Override
-	public String getDriverDescription() {
-		return "Example dummy Driver";
+	
+	public boolean readBoolean(int address){
+		return m_random.nextBoolean();
 	}
-
-	@Override
-	public String getAddressSintax() {
-		return "Available addresses are \"1\", \"2\" and \"3\". /n"
-				+ "Address 1 is a random Int; /n"
-				+ "Address 2 is a random Double; /n"
-				+ "Address 3 is a random String";
+	
+	public void writeInteger(int address, int value){
+		s_logger.info("Writing integer {} to address {}", value, address);
 	}
-
-	@Override
-	public String getHelp() {
-		return "No help text available";
+	
+	public void writeBoolean(int address, boolean value){
+		s_logger.info("Writing boolean {} to address {}", value, address);		
 	}
 
 }

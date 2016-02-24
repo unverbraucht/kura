@@ -1,4 +1,15 @@
-package org.eclipse.kura.wire;
+/**
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Eurotech
+ */
+package org.eclipse.kura.wires;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,11 +22,11 @@ import org.osgi.service.wireadmin.Wire;
 
 public class WireSupport implements Producer, Consumer
 {
-    private WireSupporter m_wireSupporter;
+    private WireComponent m_wireSupporter;
     private List<Wire>    m_outgoingWires;
     private List<Wire>    m_incomingWires;
     
-    public WireSupport(WireSupporter wireSupporter)
+    public WireSupport(WireComponent wireSupporter)
     {
     	m_outgoingWires = new ArrayList<Wire>();
     	m_incomingWires = new ArrayList<Wire>();

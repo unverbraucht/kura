@@ -27,8 +27,8 @@
    <service>
       <provide interface="org.eclipse.kura.configuration.ConfigurableComponent"/>
       <provide interface="org.eclipse.kura.data.DataServiceListener"/>
-      <provide interface="org.eclipse.kura.wire.WireSupporter"/>
-      <provide interface="org.eclipse.kura.wire.WireReceiver"/>
+      <provide interface="org.eclipse.kura.wires.WireComponent"/>
+      <provide interface="org.eclipse.kura.wires.WireReceiver"/>
       <provide interface="org.osgi.service.wireadmin.Consumer"/>      
    </service>
    <reference name="DataService" 

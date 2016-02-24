@@ -1,9 +1,19 @@
+/**
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Eurotech
+ */
 package org.eclipse.kura.protocol.modbus2.impl;
 
 import java.io.File;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 
 import org.eclipse.kura.KuraConnectException;
 import org.eclipse.kura.KuraConnectionStatus;
@@ -20,16 +30,14 @@ import org.eclipse.kura.protocol.modbus2.api.ModbusProtocolDeviceService;
 import org.eclipse.kura.protocol.modbus2.api.ModbusProtocolProperties;
 import org.eclipse.kura.protocol.modbus2.api.ModbusProtocolService;
 import org.eclipse.kura.protocol.modbus2.connectors.EthernetConnector;
-import org.eclipse.kura.protocol.modbus2.connectors.SerialConnector;
 import org.eclipse.kura.usb.UsbService;
 import org.eclipse.kura.usb.UsbTtyDevice;
-import org.eclipse.kura.wire.DeviceConnection;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.io.ConnectionFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class ModbusProtocolDeviceServiceImpl implements ConfigurableComponent, DeviceConnection, ModbusProtocolDeviceService {
+public class ModbusProtocolDeviceServiceImpl implements ConfigurableComponent, ModbusProtocolDeviceService {
 
 	private Logger s_logger = LoggerFactory.getLogger(ModbusProtocolDeviceServiceImpl.class);
 
@@ -131,7 +139,7 @@ public class ModbusProtocolDeviceServiceImpl implements ConfigurableComponent, D
 		if (m_connType.equals(ModbusProtocolProperties.MODE_RS232) || m_connType.equals(ModbusProtocolProperties.MODE_RS485)) {
 			if (!serialPortExists())
 				throw new ModbusProtocolException(ModbusProtocolErrorCode.NOT_AVAILABLE);
-			m_comm = new SerialConnector(m_connectionFactory, props);
+			//m_comm = new SerialConnector(m_connectionFactory, props);
 		} else if (m_connType.equals(PROTOCOL_CONNECTION_TYPE_ETHER_TCP))
 			m_comm = new EthernetConnector(m_connectionFactory, props);
 		else
@@ -628,36 +636,6 @@ public class ModbusProtocolDeviceServiceImpl implements ConfigurableComponent, D
 				throw new ModbusProtocolException(ModbusProtocolErrorCode.INVALID_DATA_TYPE);
 	}
 
-	@Override
-	public void write(String address, Object value) throws KuraException {
-		// TODO Auto-generated method stub
-
-	}
-
-	@Override
-	public Object read(String address) throws KuraException {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getDriverDescription() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getAddressSintax() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
-	@Override
-	public String getHelp() {
-		// TODO Auto-generated method stub
-		return null;
-	}
-
 	// ----------------------------------------------------------------
 	//
 	// Private methods
@@ -707,15 +685,6 @@ public class ModbusProtocolDeviceServiceImpl implements ConfigurableComponent, D
 			m_comm.disconnect();
 		} else {
 			throw new KuraConnectException("Undefined driver");
-		}
-	}
-
-	@Override
-	public boolean isConnected() {
-		if (m_comm != null) {
-			return m_comm.getConnectStatus() == KuraConnectionStatus.CONNECTED;
-		} else {
-			return false;
 		}
 	}
 

@@ -1,3 +1,14 @@
+/**
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Eurotech
+ */
 package org.eclipse.kura.protocol.modbus2.wires;
 
 import java.util.Map;
@@ -13,27 +24,22 @@ import org.eclipse.kura.multitons.MultitonRegistrationCallback;
 import org.eclipse.kura.multitons.MultitonService;
 import org.eclipse.kura.protocol.modbus2.ModbusProtocolException;
 import org.eclipse.kura.protocol.modbus2.api.ModbusProtocolDeviceService;
-import org.eclipse.kura.wire.Device;
-import org.eclipse.kura.wire.DeviceConnection;
-import org.eclipse.kura.wire.WireEmitter;
-import org.eclipse.kura.wire.WireEnvelope;
-import org.eclipse.kura.wire.WireField;
-import org.eclipse.kura.wire.WireReceiver;
-import org.eclipse.kura.wire.WireRecord;
-import org.eclipse.kura.wire.WireSupport;
-import org.eclipse.kura.wire.WireValue;
-import org.eclipse.kura.wire.WireValueBoolean;
-import org.eclipse.kura.wire.WireValueInteger;
-import org.eclipse.kura.wire.WireValueString;
+import org.eclipse.kura.wires.WireEmitter;
+import org.eclipse.kura.wires.WireEnvelope;
+import org.eclipse.kura.wires.WireField;
+import org.eclipse.kura.wires.WireReceiver;
+import org.eclipse.kura.wires.WireRecord;
+import org.eclipse.kura.wires.WireSupport;
+import org.eclipse.kura.wires.WireValueBoolean;
+import org.eclipse.kura.wires.WireValueInteger;
+import org.eclipse.kura.wires.WireValueString;
 import org.osgi.framework.ServiceReference;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.wireadmin.Wire;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import sun.security.util.*;
-
-public class ModbusReadWire implements WireEmitter, WireReceiver, ConfigurableComponent, Device, MultitonRegistrationCallback {
+public class ModbusReadWire implements WireEmitter, WireReceiver, ConfigurableComponent, MultitonRegistrationCallback {
 
 	private static final Logger s_logger = LoggerFactory.getLogger(ModbusReadWire.class);
 
@@ -179,42 +185,42 @@ public class ModbusReadWire implements WireEmitter, WireReceiver, ConfigurableCo
 	//
 	// ----------------------------------------------------------------
 
-	@Override
-	public WireRecord readDataRecord() throws KuraException {
-		return readData();
-	}
+//	@Override
+//	public WireRecord readDataRecord() throws KuraException {
+//		return readData();
+//	}
+//
+//	@Override
+//	public WireField readDataField(String name) throws KuraException {
+//		WireRecord wr = readData();
+//		for(WireField f : wr.getFields()){
+//			if(f.getName().equals(name)){
+//				return f;
+//			}
+//		}
+//		throw new KuraException(KuraErrorCode.INTERNAL_ERROR);
+//	}
+//
+//	@Override
+//	public void writeDataField(WireField dataField) throws KuraException {
+//		// Do nothing. This is only a reader
+//
+//	}
 
-	@Override
-	public WireField readDataField(String name) throws KuraException {
-		WireRecord wr = readData();
-		for(WireField f : wr.getFields()){
-			if(f.getName().equals(name)){
-				return f;
-			}
-		}
-		throw new KuraException(KuraErrorCode.INTERNAL_ERROR);
-	}
-
-	@Override
-	public void writeDataField(WireField dataField) throws KuraException {
-		// Do nothing. This is only a reader
-
-	}
-
-	@Override
-	public DeviceConnection getDeviceConnection() {
-		return (DeviceConnection) m_connection;
-	}
-
-	@Override
-	public int getPollingInterval() {
-		return m_config.getPolling();
-	}
-
-	@Override
-	public int getFetchMode() {
-		return m_config.getMode();
-	}
+//	@Override
+//	public DeviceDriver getDeviceConnection() {
+//		return (DeviceDriver) m_connection;
+//	}
+//
+//	@Override
+//	public int getPollingInterval() {
+//		return m_config.getPolling();
+//	}
+//
+//	@Override
+//	public int getFetchMode() {
+//		return m_config.getMode();
+//	}
 
 	// ----------------------------------------------------------------
 	//
@@ -308,19 +314,19 @@ public class ModbusReadWire implements WireEmitter, WireReceiver, ConfigurableCo
 		public void run() {
 			try {
 				while (true) {
-					int pi = getPollingInterval();
-					if (pi != -1) {
-						Thread.sleep(pi);
-
-						try {
-							WireRecord wr = readDataRecord();
-							m_wireSupport.emit(wr);
-						} catch (Exception ex) {
-							emitException(ex);
-						}
-					} else {
+//					int pi = getPollingInterval();
+//					if (pi != -1) {
+//						Thread.sleep(pi);
+//
+//						try {
+//							WireRecord wr = readDataRecord();
+//							m_wireSupport.emit(wr);
+//						} catch (Exception ex) {
+//							emitException(ex);
+//						}
+//					} else {
 						Thread.sleep(5000);
-					}
+//					}
 				}
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block

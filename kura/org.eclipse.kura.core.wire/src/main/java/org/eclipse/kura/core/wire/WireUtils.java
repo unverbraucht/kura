@@ -1,12 +1,24 @@
+/**
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Eurotech
+ */
 package org.eclipse.kura.core.wire;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import org.eclipse.kura.wire.WireEmitter;
-import org.eclipse.kura.wire.WireReceiver;
+import org.eclipse.kura.wires.WireEmitter;
+import org.eclipse.kura.wires.WireReceiver;
 import org.osgi.framework.Bundle;
+import org.osgi.framework.BundleContext;
 import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.framework.ServiceReference;
 import org.osgi.framework.wiring.BundleWiring;
@@ -14,9 +26,9 @@ import org.osgi.service.component.ComponentContext;
 
 public class WireUtils {
 
-	public static boolean isEmitter(ComponentContext ctx, String pid){
+	public static boolean isEmitter(BundleContext ctx, String pid){
 		try {
-			Collection<ServiceReference<WireEmitter>> services = ctx.getBundleContext().getServiceReferences(WireEmitter.class, null);
+			Collection<ServiceReference<WireEmitter>> services = ctx.getServiceReferences(WireEmitter.class, null);
 			for (ServiceReference<?> service : services) {
 				if( service.getProperty("service.pid").equals(pid)){
 					return true;
@@ -29,9 +41,9 @@ public class WireUtils {
 		return false;
 	}
 	
-	public static boolean isReceiver(ComponentContext ctx, String pid){
+	public static boolean isReceiver(BundleContext ctx, String pid){
 		try {
-			Collection<ServiceReference<WireReceiver>> services = ctx.getBundleContext().getServiceReferences(WireReceiver.class, null);
+			Collection<ServiceReference<WireReceiver>> services = ctx.getServiceReferences(WireReceiver.class, null);
 			for (ServiceReference<?> service : services) {
 				if(service.getProperty("service.pid").equals(pid)){
 					return true;
@@ -87,7 +99,7 @@ public class WireUtils {
 		return result;
 	}
 	
-	public static List<String> getEmittersAndConsumers(ComponentContext ctx){
+	public static List<String> getEmittersAndReceivers(ComponentContext ctx){
 		ArrayList<String> result = new ArrayList<String>();
 		
 		try {

@@ -1,7 +1,17 @@
+/**
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ *  All rights reserved. This program and the accompanying materials
+ *  are made available under the terms of the Eclipse Public License v1.0
+ *  which accompanies this distribution, and is available at
+ *  http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *   Eurotech
+ */
 package org.eclipse.kura.core.wire;
 
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -25,10 +35,7 @@ public class WireServiceOptions
 	
 	
 	public List<WireConfiguration> getWireConfigurations() {
-		System.err.println("***************************");
-		System.err.println(m_wireConfigurations.size());
-		System.err.println("***************************");
-		return m_wireConfigurations;
+		return Collections.unmodifiableList(m_wireConfigurations);
 	}
 	
 	
@@ -63,30 +70,4 @@ public class WireServiceOptions
 		return jsonWires.toString();
 	}
 	
-	
-	public static void main(String[] argv) throws JSONException 
-	{
-		WireConfiguration wireConf = null;
-		wireConf = new WireConfiguration("org.eclipse.kura.demo.heater.Heater",
-										 "org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher",
-										 null);
-		
-		WireConfiguration wireConf1 = null;
-		wireConf1 = new WireConfiguration("org.eclipse.kura.demo.heater.Heater",
-				 						  "org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher",
-				 						  "(wirevalue.elapsed>=1500)");
-		
-		List<WireConfiguration> wireConfs = new ArrayList<WireConfiguration>();
-		wireConfs.add(wireConf);
-		wireConfs.add(wireConf1);
-		
-		WireServiceOptions wireOpts = new WireServiceOptions(wireConfs);
-		String json = wireOpts.toJsonString();
-		System.err.println(json);
-		
-		Map<String,Object> opts = new HashMap<String,Object>();
-		opts.put("wires", json);
-		WireServiceOptions wireOpts1 = WireServiceOptions.newInstance(opts);
-		System.err.println(wireOpts1.toJsonString());		
-	}
 }

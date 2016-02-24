@@ -23,7 +23,7 @@
    <implementation class="org.eclipse.kura.core.wire.WireServiceImpl"/>
    <service>
       <provide interface="org.eclipse.kura.configuration.SelfConfiguringComponent"/>
-      <provide interface="org.eclipse.kura.wire.WireService"/>
+      <provide interface="org.eclipse.kura.wires.WireService"/>
    </service>
    <property name="service.pid" value="org.eclipse.kura.core.wire.WireServiceImpl"/>
    <reference name="MultitonService" 

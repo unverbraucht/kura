@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011, 2015 Eurotech and/or its affiliates
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -28,21 +28,21 @@ import java.util.Map;
 import org.eclipse.kura.configuration.ConfigurableComponent;
 import org.eclipse.kura.core.wire.store.DbDataTypeMapper.JdbcType;
 import org.eclipse.kura.db.DbService;
-import org.eclipse.kura.wire.WireDataType;
-import org.eclipse.kura.wire.WireEmitter;
-import org.eclipse.kura.wire.WireEnvelope;
-import org.eclipse.kura.wire.WireField;
-import org.eclipse.kura.wire.WireReceiver;
-import org.eclipse.kura.wire.WireRecord;
-import org.eclipse.kura.wire.WireSupport;
-import org.eclipse.kura.wire.WireValueBoolean;
-import org.eclipse.kura.wire.WireValueByte;
-import org.eclipse.kura.wire.WireValueDouble;
-import org.eclipse.kura.wire.WireValueInteger;
-import org.eclipse.kura.wire.WireValueLong;
-import org.eclipse.kura.wire.WireValueRaw;
-import org.eclipse.kura.wire.WireValueShort;
-import org.eclipse.kura.wire.WireValueString;
+import org.eclipse.kura.wires.WireDataType;
+import org.eclipse.kura.wires.WireEmitter;
+import org.eclipse.kura.wires.WireEnvelope;
+import org.eclipse.kura.wires.WireField;
+import org.eclipse.kura.wires.WireReceiver;
+import org.eclipse.kura.wires.WireRecord;
+import org.eclipse.kura.wires.WireSupport;
+import org.eclipse.kura.wires.WireValueBoolean;
+import org.eclipse.kura.wires.WireValueByte;
+import org.eclipse.kura.wires.WireValueDouble;
+import org.eclipse.kura.wires.WireValueInteger;
+import org.eclipse.kura.wires.WireValueLong;
+import org.eclipse.kura.wires.WireValueRaw;
+import org.eclipse.kura.wires.WireValueShort;
+import org.eclipse.kura.wires.WireValueString;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.wireadmin.Wire;
 import org.slf4j.Logger;

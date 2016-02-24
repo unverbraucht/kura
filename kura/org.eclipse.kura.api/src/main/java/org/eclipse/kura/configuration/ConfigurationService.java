@@ -62,35 +62,25 @@ public interface ConfigurationService
 	
 	/**
 	 * Returns the PID of a new component created through the specified factoryPid.
+	 * @param factoryPid The pid of the factory to use for the new instance
+	 * @param properties a map of properties describing the component configuration. If null the implementation
+	 * should create a new ConfigurableComponent with the default properties from the factory
 	 */
-	public String createComponent(String factoryPid, Map<String,Object> properties) throws KuraException;
+	public String newConfigurableComponent(String factoryPid, Map<String,Object> properties) throws KuraException;
 
 	/**
 	 * Deletes the specified component.
 	 */
-	public void deleteComponent(String pid) throws KuraException;
+	public void deleteConfigurableComponent(String pid) throws KuraException;
 
 	/**
 	 * Returns the current Pid for the multiton instance whose Pid was stored in a snapshot.
 	 * Can return itself if the instance Pid has not changed for some reason.
-	 * @param storedPid Pid previously assigned to this instance in a previous configuration
+	 * @param snapshotPid Pid previously assigned to this instance in a previous configuration
 	 * @return the new Pid as returned by the Configuration Service while instantiating the component
 	 */
-	public String getUpdatedMultitonPid(String storedPid);
-	
-	/**
-	 * Adds a ConfigurationCallback to track component registration. A string filter can be specified for a specific pid on each callback. 
-	 * If no filter is specified, the callback is called for each registered/unregistered component
-	 * @param callback
-	 */
-	public void addComponentRegistrationCallback(ConfigurationCallback callback);
-	
-	/**
-	 * Removes a previously assigned callback. If no callback is found, fails silently.
-	 * @param callback
-	 */
-	public void removeComponentRegistrationCallback(ConfigurationCallback callback);
-	
+	public String getCurrentComponentPid(String snapshotPid);
+		
 	/**
 	 * Return the PIDs (service's persistent identity) for all the services that 
 	 * implements the ConfigurableComponent Maker interface and registered themselves

@@ -29,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,7 +39,6 @@ import org.eclipse.kura.KuraErrorCode;
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.KuraPartialSuccessException;
 import org.eclipse.kura.configuration.ComponentConfiguration;
-import org.eclipse.kura.configuration.ConfigurationCallback;
 import org.eclipse.kura.configuration.ConfigurationService;
 import org.eclipse.kura.configuration.Password;
 import org.eclipse.kura.configuration.SelfConfiguringComponent;
@@ -112,8 +110,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	private Map<String, String> m_multitonPids;
 
-	private List<ConfigurationCallback> m_callbacks;
-
 	// ----------------------------------------------------------------
 	//
 	// Dependencies
@@ -160,7 +156,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		m_factoryPids = new HashSet<String>();
 		m_pidsAndFactories = new HashMap<String, String>();
 		m_multitonPids = new HashMap<String, String>();
-		m_callbacks = new CopyOnWriteArrayList<ConfigurationCallback>();
 	}
 
 	// ----------------------------------------------------------------
@@ -338,19 +333,19 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String createComponent(String factoryPid, Map<String, Object> properties) throws KuraException {
+	public String newConfigurableComponent(String factoryPid, Map<String, Object> properties) throws KuraException {
 		String instancePid;
 		try {
 
-			// FIXME: What is the second argument in createFactoryConfiguration?
+			// Second argument in createFactoryConfiguration is a bundle location. If left null the new bundle location
+			// will be bound to the location of the first bundle that registers a Managed Service Factory with a corresponding PID
 			instancePid = m_configurationAdmin.createFactoryConfiguration(factoryPid, null).getPid();
 
 			// following update() invocations will find existing instance and
 			// invoke @Modified
-			OCD ocd = m_ocds.get(factoryPid);
-			// Map<String,Object> props =
-			// ComponentUtil.getDefaultProperties(ocd, m_ctx);
-			// Dictionary dict = CollectionsUtil.mapToDictionary(props);
+			if(properties == null){
+				properties = getComponentDefaultConfiguration(factoryPid).getConfigurationProperties();
+			}
 			Dictionary dict = CollectionsUtil.mapToDictionary(properties);
 			m_configurationAdmin.getConfiguration(instancePid, null).update(dict);
 			m_pidsAndFactories.put(instancePid, factoryPid);
@@ -364,7 +359,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 	}
 
 	@Override
-	public void deleteComponent(String pid) throws KuraException {
+	public void deleteConfigurableComponent(String pid) throws KuraException {
 		try {
 			// FIXME: when a component is a deleted, is its configuration
 			// removed from the kura snapshot?
@@ -568,7 +563,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 			// register the component instance
 			s_logger.info("Registration of ConfigurableComponent {} by {}...", pid, this);
 			m_allActivatedPids.add(pid);
-			notifyCallbacks(pid, true);
 		}
 
 		if (factoryPid != null && !m_ocds.containsKey(pid)) {
@@ -591,7 +585,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 		m_allActivatedPids.add(pid);
 		m_activatedSelfConfigComponents.add(pid);
-		notifyCallbacks(pid, true);
 	}
 
 	void unregisterComponentConfiguration(String pid) {
@@ -603,7 +596,6 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 		m_allActivatedPids.remove(pid);
 		m_ocds.remove(pid);
 		m_activatedSelfConfigComponents.remove(pid);
-		notifyCallbacks(pid, false);
 	}
 
 	boolean mergeWithDefaults(OCD ocd, Map<String, Object> properties) throws KuraException {
@@ -1031,7 +1023,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 						s_logger.error("***************************************************************");
 						s_logger.error(config.getConfigurationProperties().get(PROP_FACTORY_PID).toString());
 						String factoryPid = s.toString();
-						String newPid = createComponent(factoryPid, confs);
+						String newPid = newConfigurableComponent(factoryPid, confs);
 						m_multitonPids.put(confs.get(PROP_SERVICE_PID).toString(), newPid);
 						s_logger.error("Created {} instance with pid {}", factoryPid, newPid);
 						s_logger.error("Added to m_oldPid: {} - {}", confs.get(PROP_SERVICE_PID).toString(), newPid);
@@ -1446,42 +1438,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 	}
 
 	@Override
-	public void addComponentRegistrationCallback(ConfigurationCallback callback) {
-		m_callbacks.add(callback);
-	}
-
-	@Override
-	public void removeComponentRegistrationCallback(ConfigurationCallback callback) {
-		m_callbacks.remove(callback);
-	}
-
-	private void notifyCallbacks(String pid, boolean registered) {
-		Iterator<ConfigurationCallback> it = m_callbacks.iterator();
-		while (it.hasNext()) {
-			ConfigurationCallback c = it.next();
-			boolean notify = false;
-			if (c.getFilter() == null) {
-				notify = true;
-			} else {
-				for (String s : c.getFilter()) {
-					if (s.equals(pid)) {
-						notify = true;
-						break;
-					}
-				}
-			}
-			if (notify) {
-				if (registered) {
-					c.componentRegistered(pid);
-				} else {
-					c.componentUnregistered(pid);
-				}
-			}
-		}
-	}
-
-	@Override
-	public String getUpdatedMultitonPid(String storedPid) {
+	public String getCurrentComponentPid(String storedPid) {
 
 		String newPid = m_multitonPids.get(storedPid);
 		if (newPid != null) {

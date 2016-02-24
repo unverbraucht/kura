@@ -1,5 +1,5 @@
 /**
- * Copyright (c) 2011, 2015 Eurotech and/or its affiliates
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
  *  All rights reserved. This program and the accompanying materials
  *  are made available under the terms of the Eclipse Public License v1.0
@@ -25,11 +25,11 @@ import org.eclipse.kura.data.DataService;
 import org.eclipse.kura.data.DataServiceListener;
 import org.eclipse.kura.message.KuraPayload;
 import org.eclipse.kura.message.KuraPosition;
-import org.eclipse.kura.wire.WireEnvelope;
-import org.eclipse.kura.wire.WireField;
-import org.eclipse.kura.wire.WireReceiver;
-import org.eclipse.kura.wire.WireRecord;
-import org.eclipse.kura.wire.WireSupport;
+import org.eclipse.kura.wires.WireEnvelope;
+import org.eclipse.kura.wires.WireField;
+import org.eclipse.kura.wires.WireReceiver;
+import org.eclipse.kura.wires.WireRecord;
+import org.eclipse.kura.wires.WireSupport;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.wireadmin.Wire;
 import org.osgi.util.position.Position;
