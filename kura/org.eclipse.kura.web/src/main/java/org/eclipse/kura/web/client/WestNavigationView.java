@@ -242,7 +242,7 @@ public class WestNavigationView extends LayoutContainer
             m_centerPanel.setIcon(AbstractImagePrototype.create(Resources.INSTANCE.router()));
             m_centerPanel.setHeading(MSGS.device());
             m_centerPanel.removeAll();                  
-            m_centerPanel.add(new DevicePanel(m_currentSession));
+            m_centerPanel.add(new DevicePanel(m_currentSession, m_servicesTree));
             m_centerPanel.layout();
 		}
 		else if ("network".equals(selectedId)) {

@@ -32,7 +32,6 @@ public class DeviceExample extends WireDevice {
 
 	public DeviceExample() {
 		m_inputs = new ArrayList<ExampleInput>();
-		m_driver = new DriverExample();
 	}
 
 	@Override
@@ -49,6 +48,7 @@ public class DeviceExample extends WireDevice {
 	protected void afterActivate(ComponentContext ctx, Map<String, Object> properties) {
 
 		super.setDeviceChannelDescriptor(new ExampleDeviceDescriptor());
+		super.setDeviceDriver("Driver di esempio");
 		
 		//addDebugData();
 		

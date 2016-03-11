@@ -132,6 +132,9 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 			m_serviceTracker.open();
 
 			createWires();
+			
+			// debug();
+			
 		} catch (JSONException jsone) {
 			throw new ComponentException(jsone);
 			// } catch (KuraException e) {
@@ -143,16 +146,26 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 
 	}
 
+	private void debug(){
+
+		try {
+			m_multitonService.newMultitonInstance("org.eclipse.kura.example.wire.device.DriverExample", true, "Driver di esempio");
+		} catch (KuraException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+	
 	private void initDebugData() {
 
 		try {
-			String m_cloudPubPid = createWireComponent("org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher");
+			String m_cloudPubPid = createWireComponent("org.eclipse.kura.core.wire.cloud.publisher.CloudPublisher", "Cloud Publisher");
 
-			String dbStorePubPid = createWireComponent("org.eclipse.kura.core.wire.store.DbWireRecordStore");
+			String dbStorePubPid = createWireComponent("org.eclipse.kura.core.wire.store.DbWireRecordStore", "Record Store");
 
-			String dbRecordFilterPubPid = createWireComponent("org.eclipse.kura.core.wire.store.DbWireRecordFilter");
+			String dbRecordFilterPubPid = createWireComponent("org.eclipse.kura.core.wire.store.DbWireRecordFilter", "Record Filter");
 
-			String exampleDevicePubPid = createWireComponent("org.eclipse.kura.example.wire.device.DeviceExample");
+			String exampleDevicePubPid = createWireComponent("org.eclipse.kura.example.wire.device.DeviceExample", "Device Example");
 
 			String heaterPid = "org.eclipse.kura.demo.heater.Heater";
 			// Wire wire = m_wireAdmin.createWire(heaterPid, m_cloudPubPid,
@@ -199,12 +212,21 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 			}
 			final Object emitterPid = properties.get("emitter.pids");
 			final Object receiverPid = properties.get("receiver.pids");
+			
+			String emitterName = null;
+			try{
+				emitterName = (String)properties.get("emitter.name");
+			}catch(Exception ex){}
+			String receiverName = null;
+			try{
+				receiverName = (String)properties.get("receiver.name");
+			}catch(Exception ex){}
 
 			// NEW WIRE
 			if (emitterPid != null && receiverPid != null) {
 				if (!emitterPid.toString().equals("NONE") && !receiverPid.toString().equals("NONE")) {
-					final String emitterString = createComponentFromProperty(emitterPid.toString());
-					final String receiverString = createComponentFromProperty(receiverPid.toString());
+					final String emitterString = createComponentFromProperty(emitterPid.toString(), emitterName);
+					final String receiverString = createComponentFromProperty(receiverPid.toString(), receiverName);
 					WireConfiguration wc = new WireConfiguration(emitterString, receiverString, null, false);
 					m_wireConfig.add(wc);
 					createWires();
@@ -237,10 +259,10 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 		}
 	}
 
-	private String createComponentFromProperty(String value) {
+	private String createComponentFromProperty(String value, String name) {
 		String[] tokens = value.split("\\|");
 		if (tokens[0].equals("FACTORY")) {
-			return createWireComponent(tokens[1]);
+			return createWireComponent(tokens[1], name);
 		} else {
 			return tokens[1];
 		}
@@ -258,55 +280,10 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 	// ----------------------------------------------------------------
 
 	@Override
-	public String createWireComponent(final String factoryPid) {
+	public String createWireComponent(final String factoryPid, String name) {
 		String newPid = null;
 		try {
-			ComponentConfiguration compConfig;
-
-			// We register a callback before creating a new multiton instance,
-			// so to catch the registration
-			// on the ConfigurationAdmin later on.
-			
-			/*
-			m_multitonService.addMultitonServiceRegistrationCallback(new MultitonRegistrationCallback() {
-
-				@Override
-				public void MultitonComponentRegistered(String pid, ServiceReference<?> service) {
-					// When receiving a registration event we have to
-					// save a snapshot and remove
-					// this listener.
-					// Note that when there are concurrent component
-					// registrations with the same factory
-					// the invocation of the callback could not be
-					// coupled to the new pid created.
-					// However, we just have to make sure we fire a
-					// snapshot for each new component
-					// and make sure callbacks get removed after each
-					// registration.
-					try {
-						m_configService.snapshot();
-					} catch (KuraException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}
-					m_multitonService.removeMultitonServiceRegistrationCallback(this);
-				}
-
-				@Override
-				public void MultitonComponentUnregistered(String pid, ServiceReference<?> service) {
-					// This will never be invoked
-				}
-
-				@Override
-				public String getFactoryPidFilter() {
-					// Filter by this factory pid
-					return factoryPid;
-				}
-			});
-			*/
-			compConfig = m_configService.getComponentDefaultConfiguration(factoryPid);
-			newPid = m_configService.newConfigurableComponent(factoryPid, compConfig.getConfigurationProperties());
-
+			newPid = m_configService.newConfigurableComponent(factoryPid, null, false, name);
 		} catch (Exception ex) {
 
 		}
@@ -544,6 +521,16 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 		emitterTad.setDescription("Choose a WireEmitter");
 		WiresOCD.addAD(emitterTad);
 
+		Tad emitterName= new Tad();
+		emitterName.setId("emitter.name");
+		emitterName.setName("emitter.name");
+		emitterName.setType(Tscalar.STRING);
+		emitterName.setCardinality(0);
+		emitterName.setRequired(false);
+		emitterName.setDefault("");
+		emitterName.setDescription("multiton.instance.name for the resulting component. If left null it will equal service.pid");
+		WiresOCD.addAD(emitterName);
+		
 		// Create an option element for each producer factory
 		ArrayList<String> receiversOptions = new ArrayList<String>();
 
@@ -567,15 +554,20 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 			sb.append(" ,");
 		}
 		receiverTad.setDefault(sb.toString());
+		receiverTad.setDescription("Choose a WireReceiver");
+		WiresOCD.addAD(receiverTad);
 
+		Tad receiverName= new Tad();
+		receiverName.setId("receiver.name");
+		receiverName.setName("receiver.name");
+		receiverName.setType(Tscalar.STRING);
+		receiverName.setCardinality(0);
+		receiverName.setRequired(false);
+		receiverName.setDefault("");
 		// Build the description String of the receiver.pids element so to also
 		// show a table of all
-		// the actuve wires.
-		// NOTE: THERE COULD BE A SECURITY ISSUE HERE! SAME LINES WILL BE SHOWN
-		// ON CLOUD PLATFORM.
-		// POSSIBLE HACK.
-
-		sb = new StringBuilder("Choose a WireReceiver<br /><br /><b>Active wires:</b><br />");
+		// the active wires.
+		sb = new StringBuilder("multiton.instance.name for the resulting component. If left null it will equal service.pid<br /><br /><b>Active wires:</b><br />");
 
 		sb.append("<table style=\"width:100%; border: 1px solid black;\">");
 
@@ -586,8 +578,8 @@ public class WireServiceImpl implements SelfConfiguringComponent, WireService {
 		}
 
 		sb.append("</table>");
-		receiverTad.setDescription(sb.toString());
-		WiresOCD.addAD(receiverTad);
+		receiverName.setDescription(sb.toString());
+		WiresOCD.addAD(receiverName);
 
 		Tad wiresTad = new Tad();
 		wiresTad.setName("delete.wires");

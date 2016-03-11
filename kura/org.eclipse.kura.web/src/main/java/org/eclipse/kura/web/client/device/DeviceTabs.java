@@ -11,6 +11,7 @@
  */
 package org.eclipse.kura.web.client.device;
 
+import org.eclipse.kura.web.client.configuration.ServiceTree;
 import org.eclipse.kura.web.client.messages.Messages;
 import org.eclipse.kura.web.shared.model.GwtSession;
 
@@ -29,6 +30,7 @@ public class DeviceTabs extends LayoutContainer
 	private static final Messages MSGS = GWT.create(Messages.class);
 
 	private GwtSession				m_currentSession;
+	private ServiceTree				m_serviceTree;
 	
 	private TabPanel				m_tabsPanel;
 	private TabItem					m_tabProfile;
@@ -36,20 +38,24 @@ public class DeviceTabs extends LayoutContainer
 	private TabItem					m_tabThreads;
 	private TabItem					m_tabSysProps;
 	private TabItem					m_tabCommand;
+	private TabItem					m_tabMultitons;
 	
 	private ProfileTab				m_profileTab;
 	private BundlesTab		        m_bundlesTab;
 	private ThreadsTab		        m_threadsTab;
 	private SystemPropertiesTab		m_sysPropsTab;
 	private CommandTab				m_commandTab;
+	private MultitonsTab				m_multitonsTab;
 	
-	public DeviceTabs(GwtSession currentSession) {	    
+	public DeviceTabs(GwtSession currentSession, ServiceTree serviceTree) {	    
 		m_currentSession = currentSession;
+		m_serviceTree	 = serviceTree;
 		m_profileTab  = new ProfileTab(m_currentSession);
 		m_bundlesTab  = new BundlesTab(m_currentSession);
 		m_threadsTab  = new ThreadsTab(m_currentSession);
 		m_sysPropsTab = new SystemPropertiesTab(m_currentSession);
 		m_commandTab  = new CommandTab(m_currentSession);
+		m_multitonsTab = new MultitonsTab(m_currentSession, m_serviceTree);
 	}
 
 
@@ -119,6 +125,17 @@ public class DeviceTabs extends LayoutContainer
         	}
         });
         m_tabsPanel.add(m_tabCommand);
+        
+        m_tabMultitons = new TabItem(MSGS.deviceTabMultitons());
+        m_tabMultitons.setBorders(true);
+        m_tabMultitons.setLayout(new FitLayout());
+        m_tabMultitons.add(m_multitonsTab);
+        m_tabMultitons.addListener(Events.Select, new Listener<ComponentEvent>() {
+        	public void handleEvent(ComponentEvent be) {
+        		m_multitonsTab.refresh();
+        	}
+        });
+        m_tabsPanel.add(m_tabMultitons);
 
         add(m_tabsPanel);
     }

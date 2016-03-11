@@ -11,14 +11,17 @@
  */
 package org.eclipse.kura.example.wire.device;
 
+import java.util.Map;
 import java.util.Random;
 
 import org.eclipse.kura.KuraException;
+import org.eclipse.kura.configuration.ConfigurableComponent;
 import org.eclipse.kura.core.devices.DeviceDriver;
+import org.osgi.service.component.ComponentContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class DriverExample implements DeviceDriver {
+public class DriverExample implements DeviceDriver, ConfigurableComponent {
 	private static final Logger s_logger = LoggerFactory.getLogger(DriverExample.class);
 	private boolean m_connected = false;
 	
@@ -26,6 +29,19 @@ public class DriverExample implements DeviceDriver {
 	
 	public DriverExample(){
 		//Random values
+	}
+	
+	protected void activate(ComponentContext componentContext, Map<String, Object> properties) {
+		s_logger.debug("Activating example driver...");
+	}
+
+	protected void deactivate(ComponentContext componentContext) {
+		s_logger.debug("Deactivating example driver...");
+
+	}
+
+	protected void updated(Map<String, Object> properties) {
+		s_logger.debug("Updating example driver...");
 	}
 	
 	@Override

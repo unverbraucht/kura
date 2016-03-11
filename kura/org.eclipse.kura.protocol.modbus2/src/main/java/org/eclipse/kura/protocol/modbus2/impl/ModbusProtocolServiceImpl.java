@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.kura.KuraException;
 import org.eclipse.kura.multitons.MultitonRegistrationCallback;
 import org.eclipse.kura.multitons.MultitonService;
 import org.eclipse.kura.protocol.modbus2.ModbusProtocolDeviceInfo;
@@ -215,7 +216,13 @@ public class ModbusProtocolServiceImpl implements ModbusProtocolService, Multito
 	}
 
 	private String createModbusDeviceComponent(final String name) {
-		return m_multitonService.newMultitonInstance(MODBUS_DEVICE_FACTORY_PID);
+		try {
+			return m_multitonService.newMultitonInstance(MODBUS_DEVICE_FACTORY_PID, true);
+		} catch (KuraException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return null;
+		}
 	}
 
 	private void addDeviceDebug() {

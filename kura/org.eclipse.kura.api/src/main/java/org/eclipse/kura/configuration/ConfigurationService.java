@@ -65,8 +65,11 @@ public interface ConfigurationService
 	 * @param factoryPid The pid of the factory to use for the new instance
 	 * @param properties a map of properties describing the component configuration. If null the implementation
 	 * should create a new ConfigurableComponent with the default properties from the factory
+	 * @param takeSnapshot if set to true a snapshot will be taken after the Component has been registered
+	 * @param instanceName set the multiton.instance.name property of the resulting Component. If left to null, 
+	 * multiton.instance.name will equal service.pid
 	 */
-	public String newConfigurableComponent(String factoryPid, Map<String,Object> properties) throws KuraException;
+	public String newConfigurableComponent(String factoryPid, Map<String,Object> properties, boolean takeSnapshot, String instanceName) throws KuraException;
 
 	/**
 	 * Deletes the specified component.

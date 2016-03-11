@@ -42,6 +42,7 @@ import org.eclipse.kura.wires.WireValueLong;
 import org.eclipse.kura.wires.WireValueRaw;
 import org.eclipse.kura.wires.WireValueShort;
 import org.eclipse.kura.wires.WireValueString;
+import org.osgi.framework.InvalidSyntaxException;
 import org.osgi.service.component.ComponentContext;
 import org.osgi.service.wireadmin.Wire;
 import org.slf4j.Logger;
@@ -52,6 +53,8 @@ public abstract class WireDevice implements WireComponent, WireEmitter, WireRece
 	private static final Logger s_logger = LoggerFactory.getLogger(WireDevice.class);
 
 	protected DeviceDriver m_driver = null;
+	private DeviceDriverTracker m_deviceTracker;
+	
 	protected DeviceChannelDescriptor m_device_descriptor = null;
 
 	protected List<DataOutputRow> m_outputs;
@@ -74,10 +77,19 @@ public abstract class WireDevice implements WireComponent, WireEmitter, WireRece
 	//
 	// ----------------------------------------------------------------
 
-	public void setDeviceDriver(DeviceDriver driver) {
-		m_driver = driver;
+	public void setDeviceDriver(String driverInstanceName) {
+		try {
+			m_deviceTracker = new DeviceDriverTracker(m_ctx.getBundleContext(), this, driverInstanceName);
+			m_deviceTracker.open();
+		} catch (InvalidSyntaxException e) {
+			// InvalidSyntax will never be thrown
+		}
 	}
 
+	protected void setDeviceDriverInstance(DeviceDriver d){
+		m_driver = d;
+	}
+	
 	public void setDeviceChannelDescriptor(DeviceChannelDescriptor descriptor) {
 		m_device_descriptor = descriptor;
 	}

@@ -103,19 +103,9 @@ public class MultitonServiceImpl implements MultitonService, ServiceListener {
 	}
 
 	@Override
-	public String newMultitonInstance(String factoryPid) {
+	public String newMultitonInstance(String factoryPid, boolean takeSnapshot, String instanceName) throws KuraException {
 
-		String newPid = null;
-		ComponentConfiguration compConfig;
-		try {
-			compConfig = m_configurationService.getComponentDefaultConfiguration(factoryPid);
-			newPid = m_configurationService.newConfigurableComponent(factoryPid, compConfig.getConfigurationProperties());
-		} catch (KuraException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		return newPid;
+		return m_configurationService.newConfigurableComponent(factoryPid, null, takeSnapshot, instanceName);
 	}
 
 	@Override

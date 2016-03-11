@@ -13,7 +13,7 @@ package org.eclipse.kura.wires;
 
 public interface WireService {
 
-	public String createWireComponent(String factoryPid);
+	public String createWireComponent(String factoryPid, String name);
 	
 	public boolean removeWireComponent(String pid);
 	

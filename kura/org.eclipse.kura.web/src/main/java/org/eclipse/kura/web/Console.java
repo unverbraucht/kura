@@ -26,6 +26,7 @@ import org.eclipse.kura.system.SystemService;
 import org.eclipse.kura.web.server.GwtCertificatesServiceImpl;
 import org.eclipse.kura.web.server.GwtComponentServiceImpl;
 import org.eclipse.kura.web.server.GwtDeviceServiceImpl;
+import org.eclipse.kura.web.server.GwtMultitonsServiceImpl;
 import org.eclipse.kura.web.server.GwtNetworkServiceImpl;
 import org.eclipse.kura.web.server.GwtPackageServiceImpl;
 import org.eclipse.kura.web.server.GwtSecurityServiceImpl;
@@ -35,6 +36,7 @@ import org.eclipse.kura.web.server.GwtSnapshotServiceImpl;
 import org.eclipse.kura.web.server.GwtStatusServiceImpl;
 import org.eclipse.kura.web.server.servlet.DeviceSnapshotsServlet;
 import org.eclipse.kura.web.server.servlet.FileServlet;
+import org.eclipse.kura.web.server.servlet.MultitonServlet;
 import org.eclipse.kura.web.server.servlet.SkinServlet;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.component.ComponentContext;
@@ -273,5 +275,7 @@ public class Console implements ConfigurableComponent {
 		m_httpService.registerServlet(servletRoot + "/file", new FileServlet(), null, httpCtx);
 		m_httpService.registerServlet(servletRoot + "/device_snapshots", new DeviceSnapshotsServlet(), null, httpCtx);
 		m_httpService.registerServlet(servletRoot + "/skin", new SkinServlet(), null, httpCtx);
+		m_httpService.registerServlet(servletRoot + "/multiton", new GwtMultitonsServiceImpl(), null, httpCtx);
+		m_httpService.registerServlet(servletRoot + "/multiton/servlet", new MultitonServlet(), null, httpCtx);
 	}
 }

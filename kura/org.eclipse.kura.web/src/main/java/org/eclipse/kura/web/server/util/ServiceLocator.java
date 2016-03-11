@@ -35,7 +35,7 @@ public class ServiceLocator
 		T service = null; 
 		BundleContext bundleContext = Console.getBundleContext();
 		if (bundleContext != null) {
-			ServiceReference sr = bundleContext.getServiceReference(serviceClass);
+			ServiceReference<T> sr = bundleContext.getServiceReference(serviceClass);
 			if (sr != null) {
 			    service = (T) bundleContext.getService(sr);
 			}
@@ -45,4 +45,5 @@ public class ServiceLocator
 		}
 		return service;
 	}
+	
 }

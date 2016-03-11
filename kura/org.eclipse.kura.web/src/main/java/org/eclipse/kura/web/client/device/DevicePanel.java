@@ -11,6 +11,7 @@
  */
 package org.eclipse.kura.web.client.device;
 
+import org.eclipse.kura.web.client.configuration.ServiceTree;
 import org.eclipse.kura.web.client.messages.Messages;
 import org.eclipse.kura.web.shared.model.GwtSession;
 
@@ -30,11 +31,13 @@ public class DevicePanel extends LayoutContainer
     @SuppressWarnings("unused")
 	private boolean                m_initialized;
 	private GwtSession             m_currentSession;
+	private ServiceTree			   m_serviceTree;
 
 	private DeviceTabs      m_deviceConfigTabs; 
 			
-    public DevicePanel(GwtSession currentSession) {
+    public DevicePanel(GwtSession currentSession, ServiceTree serviceTree) {
     	m_currentSession  = currentSession;
+    	m_serviceTree 	  = serviceTree;
     	m_initialized     = false;
     }
 
@@ -43,7 +46,7 @@ public class DevicePanel extends LayoutContainer
         super.onRender(parent, index);
         setId("device-panel-wrapper");
         
-        m_deviceConfigTabs = new DeviceTabs(m_currentSession);
+        m_deviceConfigTabs = new DeviceTabs(m_currentSession, m_serviceTree);
         
         BorderLayout borderLayout = new BorderLayout();
         setLayout(borderLayout);

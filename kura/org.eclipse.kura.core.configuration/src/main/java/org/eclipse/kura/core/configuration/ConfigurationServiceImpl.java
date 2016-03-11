@@ -78,6 +78,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	private static final String PROP_FACTORY_PID = "service.factoryPid";
 	private static final String PROP_SERVICE_PID = "service.pid";
+	private static final String PROP_MULTITON_INSTANCE_NAME = "multiton.instance.name";
 
 	private ComponentContext m_ctx;
 	private CloudConfigurationHandler m_cloudHandler;
@@ -333,7 +334,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 
 	@Override
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public String newConfigurableComponent(String factoryPid, Map<String, Object> properties) throws KuraException {
+	public String newConfigurableComponent(String factoryPid, Map<String, Object> properties, boolean takeSnapshot, String instanceName) throws KuraException {
 		String instancePid;
 		try {
 
@@ -346,10 +347,19 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 			if(properties == null){
 				properties = getComponentDefaultConfiguration(factoryPid).getConfigurationProperties();
 			}
+			if(instanceName != null){
+				properties.put(PROP_MULTITON_INSTANCE_NAME, instanceName);
+			}else{
+				properties.put(PROP_MULTITON_INSTANCE_NAME, instancePid);
+			}
 			Dictionary dict = CollectionsUtil.mapToDictionary(properties);
-			m_configurationAdmin.getConfiguration(instancePid, null).update(dict);
+			if(takeSnapshot){
+				registerComponentConfiguration(null, instancePid, factoryPid);
+				updateComponentConfiguration(instancePid, properties, takeSnapshot);
+			}else{
+				m_configurationAdmin.getConfiguration(instancePid, null).update(dict);
+			}
 			m_pidsAndFactories.put(instancePid, factoryPid);
-
 			s_logger.info("Created new component instance for factory {} with instance id {}", factoryPid, instancePid);
 		} catch (IOException e) {
 			throw new KuraException(KuraErrorCode.CONFIGURATION_ERROR, e, "Cannot create component instance for factory " + factoryPid);
@@ -1023,7 +1033,11 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 						s_logger.error("***************************************************************");
 						s_logger.error(config.getConfigurationProperties().get(PROP_FACTORY_PID).toString());
 						String factoryPid = s.toString();
-						String newPid = newConfigurableComponent(factoryPid, confs);
+						Object instanceName = confs.get(PROP_MULTITON_INSTANCE_NAME);
+						
+						String newPid = instanceName != null ? 
+								newConfigurableComponent(factoryPid, confs, false, instanceName.toString()) :
+								newConfigurableComponent(factoryPid, confs, false, null);
 						m_multitonPids.put(confs.get(PROP_SERVICE_PID).toString(), newPid);
 						s_logger.error("Created {} instance with pid {}", factoryPid, newPid);
 						s_logger.error("Added to m_oldPid: {} - {}", confs.get(PROP_SERVICE_PID).toString(), newPid);
@@ -1345,6 +1359,7 @@ public class ConfigurationServiceImpl implements ConfigurationService, Configura
 							metatypeNames.add(name);
 						}
 					}
+					metatypeNames.add(PROP_MULTITON_INSTANCE_NAME);
 				}
 			}
 
