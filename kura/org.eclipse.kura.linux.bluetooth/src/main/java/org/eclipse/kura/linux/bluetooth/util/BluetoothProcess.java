@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.linux.bluetooth.util;
 
 import java.io.BufferedReader;
@@ -13,13 +24,14 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import org.eclipse.kura.bluetooth.BluetoothGatt;
+import org.eclipse.kura.linux.bluetooth.le.beacon.BTSnoopParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class BluetoothProcess {
 
 	private static final Logger s_logger = LoggerFactory.getLogger(BluetoothProcess.class);
-	private static final ExecutorService s_streamGobblers = Executors.newFixedThreadPool(2);
+	private static final ExecutorService s_streamGobblers = Executors.newCachedThreadPool();
 
 	private Process m_process;
 	private Future<?> m_futureInputGobbler;
@@ -62,7 +74,26 @@ public class BluetoothProcess {
 				}                    
             }
         });
-        
+	}
+	
+	void execSnoop(String[] cmdArray, final BTSnoopListener listener) throws IOException {
+		s_logger.debug("Executing: {}", Arrays.toString(cmdArray));
+		ProcessBuilder pb = new ProcessBuilder(cmdArray);
+		m_process = pb.start();
+		m_bufferedWriter = new BufferedWriter(new OutputStreamWriter(m_process.getOutputStream()));
+		
+		m_futureInputGobbler = s_streamGobblers.submit(new Runnable() {
+        	@Override
+            public void run() {
+                Thread.currentThread().setName("BluetoothProcess BTSnoop Gobbler");
+                try {
+                	readBTSnoopStreamFully(m_process.getInputStream(), listener);
+				} catch (IOException e) {
+					s_logger.warn("Error in processing the error stream : ", e);
+				}                    
+            }
+        });
+		
 	}
 	
 	public void destroy() {
@@ -71,8 +102,8 @@ public class BluetoothProcess {
             closeQuietly(m_process.getInputStream());
             closeQuietly(m_process.getErrorStream());
             closeQuietly(m_process.getOutputStream());
-            m_futureInputGobbler.cancel(true);
-            m_futureErrorGobbler.cancel(true);
+            if(m_futureInputGobbler != null) m_futureInputGobbler.cancel(true);
+            if(m_futureErrorGobbler != null) m_futureErrorGobbler.cancel(true);
             m_process.destroy();
             m_process = null;
 		}
@@ -101,6 +132,21 @@ public class BluetoothProcess {
 			}
 			listener.processInputStream(stringBuilder.toString());
 			s_logger.debug("End of stream!");
+		}
+	}
+	
+	private void readBTSnoopStreamFully(InputStream is, BTSnoopListener listener) throws IOException {
+		
+		BTSnoopParser parser = new BTSnoopParser(is);
+		
+		while(true) {
+			try {
+				byte[] packet = parser.readRecord();
+				listener.processBTSnoopRecord(packet);
+			} catch(InterruptedException e) {
+				s_logger.debug("End of stream!");
+				break;
+			}
 		}
 	}
 	

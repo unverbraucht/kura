@@ -1,22 +1,21 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.core.configuration;
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-
+import java.util.Map.Entry;
 
 import org.eclipse.kura.KuraException;
 import org.eclipse.kura.configuration.Password;
@@ -36,15 +35,15 @@ public class XmlConfigPropertiesAdapter
 	{
 		List<XmlConfigPropertyAdapted> adaptedValues = new ArrayList<XmlConfigPropertyAdapted>();
 		if (props != null) {
-			Iterator<String> keys = props.keySet().iterator();
-			while (keys.hasNext()) {
+			
+			for (Entry<String, Object> prop : props.entrySet()) {
 	
 				XmlConfigPropertyAdapted adaptedValue = new XmlConfigPropertyAdapted();
 				
-				String key = keys.next();			
+				String key = prop.getKey();
 				adaptedValue.setName(key);
 	
-				Object value = props.get(key);
+				Object value = prop.getValue();
 				if (value instanceof String) {
 		    		adaptedValue.setArray(false);
 		    		adaptedValue.setType(ConfigPropertyType.stringType);
@@ -266,7 +265,7 @@ public class XmlConfigPropertiesAdapter
 						break;
 					case charType:
 						String s = adaptedProp.getValues()[0];
-						propvalue = new Character(s.charAt(0));
+						propvalue = Character.valueOf(s.charAt(0));
 						break;
 					case booleanType:
 						propvalue = Boolean.parseBoolean(adaptedProp.getValues()[0]);
@@ -353,7 +352,7 @@ public class XmlConfigPropertiesAdapter
 						for (int i=0; i<adaptedProp.getValues().length; i++) {
 							if (adaptedProp.getValues()[i] != null) {
 								String s = adaptedProp.getValues()[i];
-								charValues[i] = new Character(s.charAt(0));
+								charValues[i] = Character.valueOf(s.charAt(0));
 							}
 						}
 						propvalue = charValues;

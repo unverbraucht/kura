@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.web.server;
 
 import java.util.ArrayList;
@@ -24,6 +24,8 @@ import org.eclipse.kura.web.shared.GwtKuraException;
 import org.eclipse.kura.web.shared.model.GwtSnapshot;
 import org.eclipse.kura.web.shared.model.GwtXSRFToken;
 import org.eclipse.kura.web.shared.service.GwtSnapshotService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.extjs.gxt.ui.client.data.BaseListLoadResult;
 import com.extjs.gxt.ui.client.data.ListLoadResult;
@@ -32,6 +34,7 @@ public class GwtSnapshotServiceImpl extends OsgiRemoteServiceServlet implements 
 {
 	private static final long serialVersionUID = 8804372718146289179L;
 
+	private static final Logger s_logger = LoggerFactory.getLogger(GwtSnapshotServiceImpl.class);
 
 	public ListLoadResult<GwtSnapshot> findDeviceSnapshots(GwtXSRFToken xsrfToken) 
 		throws GwtKuraException
@@ -63,14 +66,12 @@ public class GwtSnapshotServiceImpl extends OsgiRemoteServiceServlet implements 
 		return new BaseListLoadResult<GwtSnapshot>(snapshots);
 	}
 
-
 	public void rollbackDeviceSnapshot(GwtXSRFToken xsrfToken, GwtSnapshot snapshot) 
 		throws GwtKuraException
 	{
 		checkXSRFToken(xsrfToken);
-		try {			
-
-	        ServiceLocator  locator = ServiceLocator.getInstance();
+		try {	
+			ServiceLocator  locator = ServiceLocator.getInstance();
 			ConfigurationService cs = locator.getService(ConfigurationService.class);			 
 	        cs.rollback(snapshot.getSnapshotId());
 
@@ -82,7 +83,7 @@ public class GwtSnapshotServiceImpl extends OsgiRemoteServiceServlet implements 
 			long delay = Long.parseLong(ss.getProperties().getProperty("console.updateConfigDelay", "5000"));
             if (delay > 0) {
             	Thread.sleep(delay);
-            }		
+            }
 		} 
 		catch(Throwable t) {
 			KuraExceptionHandler.handle(t);

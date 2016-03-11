@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.net.firewall;
 
 import org.eclipse.kura.net.IP4Address;
@@ -28,5 +28,9 @@ public class FirewallOpenPortConfigIP4 extends FirewallOpenPortConfigIP<IP4Addre
 	
 	public FirewallOpenPortConfigIP4(int port, NetProtocol protocol, NetworkPair<IP4Address> permittedNetwork, String permittedInterfaceName, String unpermittedInterfaceName, String permittedMac, String sourcePortRange) { 	
 		super(port, protocol, permittedNetwork, permittedInterfaceName, unpermittedInterfaceName, permittedMac, sourcePortRange);
+	}
+	
+	public FirewallOpenPortConfigIP4(String portRange, NetProtocol protocol, NetworkPair<IP4Address> permittedNetwork, String permittedInterfaceName, String unpermittedInterfaceName, String permittedMac, String sourcePortRange) { 	
+		super(portRange, protocol, permittedNetwork, permittedInterfaceName, unpermittedInterfaceName, permittedMac, sourcePortRange);
 	}
 }

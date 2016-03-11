@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
-    Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+    Copyright (c) 2011, 2016 Eurotech and/or its affiliates
 
      All rights reserved. This program and the accompanying materials
      are made available under the terms of the Eclipse Public License v1.0
@@ -19,13 +19,13 @@
 	<parent>
 		<groupId>org.eclipse.kura</groupId>
 		<artifactId>kura</artifactId>
-		<version>1.3.0-SNAPSHOT</version>
+		<version>1.5.0-SNAPSHOT</version>
 		<relativePath>../manifest_pom.xml</relativePath>
 	</parent>
 
 	<artifactId>org.eclipse.kura.core.test</artifactId>
 	<packaging>eclipse-test-plugin</packaging>
-	<version>1.0.3-SNAPSHOT</version>
+	<version>1.0.4-SNAPSHOT</version>
 
 	<properties>
 		<kura.basedir>${project.basedir}/..</kura.basedir>
@@ -38,20 +38,12 @@
                     <artifactId>tycho-packaging-plugin</artifactId>
                     <version>${tycho-version}</version>
                     <configuration>
-                            <format>'${kura.build.version}'</format>
+                        <archive>
+                			<compress>false</compress>
+                		</archive>
+                        <format>'${kura.build.version}'</format>
+                        <strictVersions>true</strictVersions>
                     </configuration>
-                    <executions>
-                            <execution>
-                                    <phase>package</phase>
-                                    <id>package-plugin</id>
-                                    <goals>
-                                            <goal>package-plugin</goal>
-                                    </goals>
-                                    <configuration>
-                                            <finalName>${project.artifactId}_${project.version}.v${kura.build.version}</finalName>
-                                    </configuration>
-                            </execution>
-                    </executions>
             </plugin>
             <plugin>
                 <groupId>org.eclipse.tycho</groupId>
@@ -78,10 +70,10 @@
 		    -->
 
                     <useUnlimitedThreads>true</useUnlimitedThreads>
-                    <argLine>${tycho.testArgLine} -DbuildingWithTycho=true -Dosgi.locking=none -Dequinox.ds.print=true -Dorg.osgi.framework.storage=/tmp/osgi/framework_storage -Dosgi.clean=true -Dorg.eclipse.kura.mode=emulator -Dkura.configuration=file:${project.basedir}/../org.eclipse.kura.emulator/src/main/resources/kura.properties -Ddpa.configuration=/tmp/kura/dpa.properties  -Dlog4j.configuration=file:../org.eclipse.kura.emulator/src/main/resources/log4j.properties</argLine>
+                    <argLine>${tycho.testArgLine} -DbuildingWithTycho=true -Dosgi.locking=none -Dequinox.ds.print=true -Djava.io.tmpdir=/tmp -Dorg.osgi.framework.storage=/tmp/osgi/framework_storage -Dosgi.clean=true -Dorg.eclipse.kura.mode=emulator -Dkura.configuration=file:${project.basedir}/../emulator/org.eclipse.kura.emulator/src/main/resources/kura.properties -Ddpa.configuration=/tmp/kura/dpa.properties  -Dlog4j.configuration=file:${project.basedir}/../emulator/org.eclipse.kura.emulator/src/main/resources/log4j.properties</argLine>
 
 		    <!-- This can be uncommented to debug the test in the event of a failure by telneting to port 5002 and seeing the state of the OSGi runtime-->
-            <!--        <appArgLine>-consoleLog -console 5002 -noExit</appArgLine>-->
+                    <!-- <appArgLine>-consoleLog -console 5002 -noExit</appArgLine> -->
             <bundleStartLevel>
 			<bundle>
 			    <id>org.eclipse.equinox.ds</id>
@@ -254,6 +246,11 @@
 			    <autoStart>true</autoStart>
 			</bundle>
 			<bundle>
+			    <id>org.eclipse.kura.emulator.net</id>
+			    <level>4</level>
+			    <autoStart>true</autoStart>
+			</bundle>
+			<bundle>
 			    <id>org.eclipse.kura.core.cloud</id>
 			    <level>4</level>
 			    <autoStart>true</autoStart>
@@ -294,7 +291,7 @@
 				<autoStart>true</autoStart>
 			</bundle>
 			<bundle>
-				<id>org.eclipse.kura.linux.status</id>
+				<id>org.eclipse.kura.core.status</id>
 				<level>4</level>
 				<autoStart>true</autoStart>
 			</bundle>
@@ -457,6 +454,10 @@
                         </dependency>
                         <dependency>
                         	<type>p2-installable-unit</type>
+                            <artifactId>org.eclipse.kura.emulator.net</artifactId>
+                        </dependency>
+                        <dependency>
+                        	<type>p2-installable-unit</type>
                             <artifactId>org.eclipse.kura.core.cloud</artifactId>
                         </dependency>
                         <dependency>
@@ -489,7 +490,7 @@
                         </dependency>
 						<dependency>
                         	<type>p2-installable-unit</type>
-                            <artifactId>org.eclipse.kura.linux.status</artifactId>
+                            <artifactId>org.eclipse.kura.core.status</artifactId>
                         </dependency>
 						<dependency>
                         	<type>p2-installable-unit</type>

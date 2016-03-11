@@ -1,7 +1,20 @@
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.bluetooth;
 
 import java.util.List;
 import java.util.UUID;
+
+import org.eclipse.kura.KuraException;
 
 /**
  * The BluetoothGatt service is the main communication interface with the Bluettoth LE device. The service
@@ -16,12 +29,19 @@ public interface BluetoothGatt {
 	 * 
 	 * @return If connection was successful
 	 */
-	public boolean connect();
+	public boolean connect() throws KuraException;
 	
 	/**
 	 * Disconnect from devices GATT server.
 	 */
 	public void disconnect();
+	
+	/**
+	 * Check if the device is connected.
+	 * 
+	 * @return If connection was successful
+	 */
+	public boolean checkConnection() throws KuraException;
 	
 	/**
 	 * Sets the listener by which asynchronous actions of the GATT
@@ -62,7 +82,7 @@ public interface BluetoothGatt {
 	 * @param handle	Characteristic handle
 	 * @return	Characteristic value
 	 */
-	public String readCharacteristicValue(String handle);
+	public String readCharacteristicValue(String handle) throws KuraException;
 	
 	/**
 	 * Read value from characteristic by UUID.
@@ -70,7 +90,7 @@ public interface BluetoothGatt {
 	 * @param uuid	UUID of Characteristic
 	 * @return	Characteristic value
 	 */
-	public String readCharacteristicValueByUuid(UUID uuid);
+	public String readCharacteristicValueByUuid(UUID uuid) throws KuraException;
 	
 	/**
 	 * Write value to characteristic.

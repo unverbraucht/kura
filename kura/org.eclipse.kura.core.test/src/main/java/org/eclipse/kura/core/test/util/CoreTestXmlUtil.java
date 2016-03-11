@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
+ *
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
+ *
+ * Contributors:
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.core.test.util;
 
 import java.io.IOException;
@@ -6,7 +17,7 @@ import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.xml.bind.JAXBException;
+
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
@@ -14,11 +25,11 @@ import javax.xml.stream.FactoryConfigurationError;
 import javax.xml.stream.XMLStreamException;
 
 import org.eclipse.kura.core.configuration.XmlSnapshotIdResult;
-import org.eclipse.kura.core.deployment.XmlBundle;
-import org.eclipse.kura.core.deployment.XmlBundleInfo;
-import org.eclipse.kura.core.deployment.XmlBundles;
-import org.eclipse.kura.core.deployment.XmlDeploymentPackage;
-import org.eclipse.kura.core.deployment.XmlDeploymentPackages;
+import org.eclipse.kura.core.deployment.xml.XmlBundle;
+import org.eclipse.kura.core.deployment.xml.XmlBundleInfo;
+import org.eclipse.kura.core.deployment.xml.XmlBundles;
+import org.eclipse.kura.core.deployment.xml.XmlDeploymentPackage;
+import org.eclipse.kura.core.deployment.xml.XmlDeploymentPackages;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -35,7 +46,7 @@ public class CoreTestXmlUtil {
 	 *  
 	 */
 	public static <T> T unmarshal(String s, Class<T> clazz) 
-			throws JAXBException, XMLStreamException, FactoryConfigurationError 
+			throws XMLStreamException, FactoryConfigurationError 
 		{
 			StringReader sr = new StringReader(s);
 			System.out.println("CoreTestXmlUtil: 30");
@@ -44,7 +55,7 @@ public class CoreTestXmlUtil {
 
 
 	public static <T> T unmarshal(Reader r, Class<T> clazz) 
-		throws JAXBException, XMLStreamException, FactoryConfigurationError 
+		throws XMLStreamException, FactoryConfigurationError 
 	{
 		DocumentBuilderFactory factory = null;
 		DocumentBuilder parser = null;

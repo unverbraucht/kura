@@ -1,18 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
-/*
-* Copyright (c) 2013 Eurotech Inc. All rights reserved.
-*/
-
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.linux.net.ppp;
 
 import java.io.BufferedReader;
@@ -57,8 +53,9 @@ public class PppLinux {
 		int pid = getPid(iface, port);
 		if(pid >= 0) {
     		s_logger.info("killing {}  pid={}", iface, pid);
-    		LinuxProcessUtil.kill(pid);
-    		
+    		if (!LinuxProcessUtil.stop(pid)) {
+    			LinuxProcessUtil.kill(pid);
+    		}
     		if (port.startsWith("/dev/")) {
     			port = port.substring("/dev/".length());
     		}

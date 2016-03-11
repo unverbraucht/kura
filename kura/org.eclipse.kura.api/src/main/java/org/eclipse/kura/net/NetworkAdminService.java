@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.net;
 
 import java.util.List;
@@ -189,9 +189,36 @@ public interface NetworkAdminService {
 	 */
 	public void manageFirewall (String gatewayIface) throws KuraException;
 	
+	/**
+	 * Obtains information for WiFi hotspots in range.
+	 * @param ifaceName - name of WiFi interface
+	 * @return map of SSIDs with respective hotspot information.
+	 * @throws KuraException
+	 */
 	public Map<String, WifiHotspotInfo> getWifiHotspots(String ifaceName) throws KuraException;
 	
+	/**
+	 * Verifies WiFi credentials by trying to establish connection with access point.
+	 * @param ifaceName - name of WiFi interface
+	 * @param wifiConfig WiFi configuration
+	 * @param tout - timeout (in seconds)
+	 * @return status - <i>true</i> if credentials are correct, <i>false</i> otherwise
+	 */
 	public boolean verifyWifiCredentials(String ifaceName, WifiConfig wifiConfig, int tout);
 	
+	/**
+	 * Rolls back to default network configuration.
+	 * @return status
+	 * @throws KuraException
+	 */
+	@Deprecated
 	public boolean rollbackDefaultConfiguration() throws KuraException;
+	
+	/**
+	 * Rolls back to default firewall configuration. 
+	 * @return status
+	 * @throws KuraException
+	 */
+	@Deprecated
+	public boolean rollbackDefaultFirewallConfiguration() throws KuraException;
 }

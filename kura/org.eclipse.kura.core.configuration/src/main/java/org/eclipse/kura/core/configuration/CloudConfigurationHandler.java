@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.core.configuration;
 
 import java.io.StringReader;
@@ -194,7 +194,7 @@ public class CloudConfigurationHandler extends Cloudlet
 		
 		if (resources.length > 2) {
 			s_logger.error("Bad request topic: {}", reqTopic.toString()); 
-			s_logger.error("Expected one or two resource(s) but found {}", resources !=null ? resources.length: "none");
+			s_logger.error("Expected one or two resource(s) but found {}", resources.length);
 			respPayload.setResponseCode(KuraResponsePayload.RESPONSE_CODE_BAD_REQUEST);
 			return;
 		}
@@ -264,7 +264,7 @@ public class CloudConfigurationHandler extends Cloudlet
 		String[] resources = reqTopic.getResources();		
 		if (resources.length > 2) {
 			s_logger.error("Bad request topic: {}", reqTopic.toString()); 
-			s_logger.error("Expected at most two resource(s) but found {}", resources !=null ? resources.length: "none");
+			s_logger.error("Expected at most two resource(s) but found {}", resources.length);
 			respPayload.setResponseCode(KuraResponsePayload.RESPONSE_CODE_BAD_REQUEST);
 			return;
 		}
@@ -350,7 +350,7 @@ public class CloudConfigurationHandler extends Cloudlet
 		
 		if (resources.length > 2) {
 			s_logger.error("Bad request topic: {}", reqTopic.toString()); 
-			s_logger.error("Expected at most two resource(s) but found {}", resources !=null ? resources.length: "none");
+			s_logger.error("Expected at most two resource(s) but found {}", resources.length);
 			respPayload.setResponseCode(KuraResponsePayload.RESPONSE_CODE_BAD_REQUEST);
 			return;
 		}

@@ -1,19 +1,15 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.net.admin.modem.sierra;
-
-/* 
- * 
- */
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,8 +45,6 @@ import java.util.List;
  * optional payload. Note that such a packet would have the first field set 
  * to 0x0000�no payload.
  * <p>
- *
- * Copyright (c) 2009 Eurotech Inc. All rights reserved.
  *
  */
 public class Hip {
@@ -104,12 +98,12 @@ public class Hip {
 		List<Byte> alMsg = new ArrayList<Byte> ();
 		
 		// form HIP message
-		alMsg.add (new Byte ((byte)((this.payloadlength>>8) & 0xff)));
-		alMsg.add (new Byte ((byte) (this.payloadlength & 0xff)));
-		alMsg.add(new Byte (this.message_id));
-		alMsg.add(new Byte (this.parameter));
+		alMsg.add (Byte.valueOf ((byte)((this.payloadlength>>8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte) (this.payloadlength & 0xff)));
+		alMsg.add(Byte.valueOf (this.message_id));
+		alMsg.add(Byte.valueOf (this.parameter));
 		for (int i = 0; i < this.payloadlength; i++) {
-			alMsg.add(new Byte (payload[i]));
+			alMsg.add(Byte.valueOf (payload[i]));
 		}
 		
 		// perform escape character processing
@@ -117,14 +111,14 @@ public class Hip {
 			byte b = ((Byte)alMsg.get(i)).byteValue();
 			if ((b == FRAME_BYTE) || (b == ESCAPE_BYTE)) {
 				alMsg.remove(i);
-				alMsg.add(i++, new Byte (ESCAPE_BYTE));
-				alMsg.add(i, new Byte ((byte)(b^MASK_BYTE)));
+				alMsg.add(i++, Byte.valueOf (ESCAPE_BYTE));
+				alMsg.add(i, Byte.valueOf ((byte)(b^MASK_BYTE)));
 			}
 		}
 		
 		// add start and end framing bytes
-		alMsg.add(0, new Byte (FRAME_BYTE));
-		alMsg.add(new Byte (FRAME_BYTE));
+		alMsg.add(0, Byte.valueOf (FRAME_BYTE));
+		alMsg.add(Byte.valueOf (FRAME_BYTE));
 		
 		// convert message to array of bytes
 		this.hipmsg = new byte [alMsg.size()];
@@ -163,7 +157,7 @@ public class Hip {
 					alMsg.remove(i);
 					b = ((Byte) alMsg.get(i)).byteValue();
 					alMsg.remove(i);
-					alMsg.add(i, new Byte((byte) (b ^ MASK_BYTE)));
+					alMsg.add(i, Byte.valueOf((byte) (b ^ MASK_BYTE)));
 				}
 			}
 		

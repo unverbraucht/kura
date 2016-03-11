@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.web.server;
 
 import java.util.ArrayList;
@@ -59,7 +59,8 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 				// ignore items we want to hide
 				if (config.getPid().endsWith("SystemPropertiesService") || 
 						config.getPid().endsWith("NetworkAdminService") ||
-						config.getPid().endsWith("NetworkConfigurationService")) {
+						config.getPid().endsWith("NetworkConfigurationService") ||
+						config.getPid().endsWith("SslManagerService")) {
 					continue;
 				}
 				
@@ -265,15 +266,17 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 
 				Object objValue = null;
 
-				Object actualObjValue = actualConfigProp.get(gwtConfigParam.getName());
+				ComponentConfiguration currentCC= cs.getComponentConfiguration(gwtCompConfig.getComponentId());
+				Map<String,Object> currentConfigProp= currentCC.getConfigurationProperties();
+				Object currentObjValue = currentConfigProp.get(gwtConfigParam.getName());
 
 				int cardinality = gwtConfigParam.getCardinality();	        	
 				if (cardinality == 0 || cardinality == 1 || cardinality == -1) {	        	
 
 					String strValue = gwtConfigParam.getValue();
 
-					if((actualObjValue instanceof Password) && strValue.equals(PLACEHOLDER)){
-						objValue = actualConfigProp.get(gwtConfigParam.getName());
+					if((currentObjValue instanceof Password) && PLACEHOLDER.equals(strValue)){
+						objValue = currentConfigProp.get(gwtConfigParam.getName());
 					} else {
 						objValue = getObjectValue(gwtConfigParam, strValue);
 					}
@@ -282,11 +285,11 @@ public class GwtComponentServiceImpl extends OsgiRemoteServiceServlet implements
 
 					String[] strValues = gwtConfigParam.getValues();
 
-					if(actualObjValue instanceof Password[]) {
-						Password[] actualPasswordValue= (Password[]) actualObjValue;
+					if(currentObjValue instanceof Password[]) {
+						Password[] currentPasswordValue= (Password[]) currentObjValue;
 						for(int i=0; i<strValues.length; i++){
-							if(strValues[i].equals(PLACEHOLDER)){
-								strValues[i]= new String(actualPasswordValue[i].getPassword());
+							if(PLACEHOLDER.equals(strValues[i])){
+								strValues[i]= new String(currentPasswordValue[i].getPassword());
 							}
 						}
 					}

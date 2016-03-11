@@ -1,19 +1,20 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.linux.net.util;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
@@ -641,7 +642,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 					
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		if ((linuxIfconfig.getType() == NetInterfaceType.ETHERNET) || (linuxIfconfig.getType() == NetInterfaceType.WIFI)) {
@@ -685,7 +688,7 @@ public class LinuxNetworkUtil {
 			proc = ProcessUtil.exec("ifconfig " + ifaceName);
 			if (proc.waitFor() != 0) {
                 s_logger.warn("getMacAddress() :: error executing command --- ifconfig {} --- exit value = {}", ifaceName , proc.exitValue());
-                return mac;
+                return null;
 			}
 
 			//get the output
@@ -713,7 +716,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		s_logger.trace("getMacAddress() :: interface={}, MAC Address={}", ifaceName, mac);
@@ -787,8 +792,7 @@ public class LinuxNetworkUtil {
 			}
 		} catch(Exception e) {
 		    s_logger.warn("Error reading multicast info", e);
-		}
-		finally {
+		} finally {
 			if(br != null){
 				try{
 					br.close();
@@ -797,7 +801,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		s_logger.trace("isSupportsMulticast() :: interface={}, multicast?={}", ifaceName, suportsMulticast);
@@ -822,7 +828,9 @@ public class LinuxNetworkUtil {
 			throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
 		}
 		finally {
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 	}
 	
@@ -877,8 +885,7 @@ public class LinuxNetworkUtil {
 			}
 		} catch (Exception e) {
 			throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
-		} 
-		finally {
+		} finally {
 			if(br != null){
 				try{
 					br.close();
@@ -887,7 +894,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		s_logger.trace("getType() :: interface={}, type={}", ifaceName, ifaceType);
@@ -981,17 +990,19 @@ public class LinuxNetworkUtil {
 			}
 			
 			//get the output
-			br = new BufferedReader(new InputStreamReader(procEthtool.getInputStream()));
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				if (line.startsWith("driver: ")) {
-					driver.put("name", line.substring(line.indexOf(": ") + 1));
-				}
-				else if (line.startsWith("version: ")) {
-					driver.put("version", line.substring(line.indexOf(": ") + 1));
-				}
-				else if (line.startsWith("firmware-version: ")) {
-					driver.put("firmware", line.substring(line.indexOf(": ") + 1));
+			if (procEthtool != null) {
+				br = new BufferedReader(new InputStreamReader(procEthtool.getInputStream()));
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (line.startsWith("driver: ")) {
+						driver.put("name", line.substring(line.indexOf(": ") + 1));
+					}
+					else if (line.startsWith("version: ")) {
+						driver.put("version", line.substring(line.indexOf(": ") + 1));
+					}
+					else if (line.startsWith("firmware-version: ")) {
+						driver.put("firmware", line.substring(line.indexOf(": ") + 1));
+					}
 				}
 			}
 			
@@ -1008,7 +1019,9 @@ public class LinuxNetworkUtil {
 					s_logger.error("I/O Exception while closing BufferedReader!");
 				}
 			}			
-			if (procEthtool != null) ProcessUtil.destroy(procEthtool);
+			if (procEthtool != null) {
+				ProcessUtil.destroy(procEthtool);
+			}
 		}
 		return driver;
 	}
@@ -1069,7 +1082,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		return capabilities;
 	}
@@ -1097,7 +1112,7 @@ public class LinuxNetworkUtil {
 				while((line = br1.readLine()) != null) {
 					int index = line.indexOf("type ");
 					if(index > -1) {
-						s_logger.debug("line: " + line);
+						s_logger.debug("line: {}", line);
 						String sMode = line.substring(index+"type ".length());
 						if("AP".equals(sMode)) {
 							mode = WifiMode.MASTER;
@@ -1122,7 +1137,7 @@ public class LinuxNetworkUtil {
 					while((line = br2.readLine()) != null) {
 						int index = line.indexOf("Mode:");
 						if(index > -1) {
-							s_logger.debug("line: " + line);
+							s_logger.debug("line: {}", line);
 							StringTokenizer st = new StringTokenizer(line.substring(index));
 							String modeStr = st.nextToken().substring(5);
 							if("Managed".equals(modeStr)) {
@@ -1158,8 +1173,12 @@ public class LinuxNetworkUtil {
 				}
 			}	
 			
-			if (procIw != null) ProcessUtil.destroy(procIw);
-			if (procIwConfig != null) ProcessUtil.destroy(procIwConfig);
+			if (procIw != null) {
+				ProcessUtil.destroy(procIw);
+			}
+			if (procIwConfig != null) {
+				ProcessUtil.destroy(procIwConfig);
+			}
 		}
 		
 		return mode;
@@ -1175,39 +1194,81 @@ public class LinuxNetworkUtil {
 		
 		SafeProcess proc = null;
 		BufferedReader br = null;
+		String line = null;
 		try {
-			//start the process
-			proc = ProcessUtil.exec("iwconfig " + ifaceName);
-			if (proc.waitFor() != 0) {
-				s_logger.warn("error executing command --- iwconfig --- exit value = {}", proc.exitValue());
-				return bitRate;
-			}
-
-			//get the output
-			br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-			String line = null;
-
-			while((line = br.readLine()) != null) {
-				int index = line.indexOf("Bit Rate=");
-				if(index > -1) {
-					s_logger.debug("line: " + line);
-					StringTokenizer st = new StringTokenizer(line.substring(index));
-					st.nextToken();	// skip 'Bit'
-					Double rate = Double.parseDouble(st.nextToken().substring(5));
-					int mult = 1;
-					
-					String unit = st.nextToken();
-					if(unit.startsWith("kb")) {
-						mult = 1000;
-					} else if (unit.startsWith("Mb")) {
-						mult = 1000000;
-					} else if (unit.startsWith("Gb")) {
-						mult = 1000000000;
-					}
-					
-					bitRate = (long) (rate * mult);
+			if (toolExists("iw")) {
+				//start the process
+				proc = ProcessUtil.exec("iw dev " + ifaceName + " link");
+				if (proc.waitFor() != 0) {
+					s_logger.warn("error executing command --- iw --- exit value = {}", proc.exitValue());
+					return bitRate;
 				}
-			}			
+				else {	
+					//get the output
+					br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+					line = null;
+		
+					while((line = br.readLine()) != null) {
+						int index = line.indexOf("tx bitrate: ");
+						if(index > -1) {
+							s_logger.debug("line: " + line);
+							StringTokenizer st = new StringTokenizer(line.substring(index));
+							st.nextToken();	// skip 'tx'
+							st.nextToken(); // skip 'bitrate:'
+							Double rate = Double.parseDouble(st.nextToken());
+							int mult = 1;
+							
+							String unit = st.nextToken();
+							if(unit.startsWith("kb")) {
+								mult = 1000;
+							} else if (unit.startsWith("Mb")) {
+								mult = 1000000;
+							} else if (unit.startsWith("Gb")) {
+								mult = 1000000000;
+							}
+							
+							bitRate = (long) (rate * mult);
+							return bitRate;
+						}
+					}
+				}
+			}
+			
+			else if(toolExists("iwconfig")) {
+				//start the process
+				proc = ProcessUtil.exec("iwconfig " + ifaceName);
+				if (proc.waitFor() != 0) {
+					s_logger.warn("error executing command --- iwconfig --- exit value = {}", proc.exitValue());
+					return bitRate;
+				}
+	
+				//get the output
+				br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+				line = null;
+	
+				while((line = br.readLine()) != null) {
+					int index = line.indexOf("Bit Rate=");
+					if(index > -1) {
+						s_logger.debug("line: {}", line);
+						StringTokenizer st = new StringTokenizer(line.substring(index));
+						st.nextToken();	// skip 'Bit'
+						Double rate = Double.parseDouble(st.nextToken().substring(5));
+						int mult = 1;
+						
+						String unit = st.nextToken();
+						if(unit.startsWith("kb")) {
+							mult = 1000;
+						} else if (unit.startsWith("Mb")) {
+							mult = 1000000;
+						} else if (unit.startsWith("Gb")) {
+							mult = 1000000000;
+						}
+						
+						bitRate = (long) (rate * mult);
+						return bitRate;
+					}
+				}
+			}
 			
 		} catch (IOException e) {
 			throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
@@ -1223,7 +1284,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		return bitRate;
@@ -1234,34 +1297,62 @@ public class LinuxNetworkUtil {
 		if (Character.isDigit(ifaceName.charAt(0))) {
 			return null;
 		}
+		
 		String ssid = null;
 		SafeProcess proc = null;
 		BufferedReader br = null;
 		try {
-			//start the process
-			proc = ProcessUtil.exec("iwconfig " + ifaceName);
-			if (proc.waitFor() != 0) {
-				s_logger.warn("error executing command --- ifconfig --- exit value = {}", proc.exitValue());
-				return ssid;
-			}
-
-			//get the output
-			br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
-			String line = null;
-
-			while((line = br.readLine()) != null) {
-				int index = line.indexOf("ESSID:");
-				if(index > -1) {
-					s_logger.debug("line: " + line);
-					String lineSub = line.substring(index);
-					StringTokenizer st = new StringTokenizer(lineSub);
-					String ssidStr = st.nextToken();
-					if(ssidStr.startsWith("\"") && ssidStr.endsWith("\"")) {
-						ssid = ssidStr.substring(lineSub.indexOf('"') + 1, lineSub.lastIndexOf('"')); // get value between quotes
+			if(toolExists("iw")) {
+				//start the process
+				proc = ProcessUtil.exec("iw dev " + ifaceName + " link");
+				if (proc.waitFor() != 0) {
+					s_logger.warn("error executing command --- iw --- exit value = {}", proc.exitValue());
+					return ssid;
+				}
+	
+				//get the output
+				br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+				String line = null;
+	
+				while((line = br.readLine()) != null) {
+					int index = line.indexOf("SSID:");
+					if(index > -1) {
+						s_logger.debug("line: {}", line);
+						String lineSub = line.substring(index);
+						StringTokenizer st = new StringTokenizer(lineSub);
+						st.nextToken();
+						ssid = st.nextToken();
+						return ssid;
 					}
 				}
-			}
+			}			
 			
+			else if(toolExists("iwconfig")) {
+				//start the process
+				proc = ProcessUtil.exec("iwconfig " + ifaceName);
+				if (proc.waitFor() != 0) {
+					s_logger.warn("error executing command --- iwconfig --- exit value = {}", proc.exitValue());
+					return ssid;
+				}
+	
+				//get the output
+				br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+				String line = null;
+	
+				while((line = br.readLine()) != null) {
+					int index = line.indexOf("ESSID:");
+					if(index > -1) {
+						s_logger.debug("line: {}", line);
+						String lineSub = line.substring(index);
+						StringTokenizer st = new StringTokenizer(lineSub);
+						String ssidStr = st.nextToken();
+						if(ssidStr.startsWith("\"") && ssidStr.endsWith("\"")) {
+							ssid = ssidStr.substring(lineSub.indexOf('"') + 1, lineSub.lastIndexOf('"')); // get value between quotes
+						}
+					}
+					return ssid;
+				}
+			}
 			
 		} catch (IOException e) {
 			throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
@@ -1277,7 +1368,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		return ssid;
@@ -1364,7 +1457,9 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 		
 		//power the controller since it is not on
@@ -1383,7 +1478,9 @@ public class LinuxNetworkUtil {
 			throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
 		}
 		finally {
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 	}
 	
@@ -1427,9 +1524,173 @@ public class LinuxNetworkUtil {
 				}
 			}
 			
-			if (proc != null) ProcessUtil.destroy(proc);
+			if (proc != null) {
+				ProcessUtil.destroy(proc);
+			}
 		}
 
 		return false;
 	}
+	
+	public static boolean isKernelModuleLoaded(String interfaceName, WifiMode wifiMode) throws KuraException {
+		boolean result = false;
+
+		// FIXME: how to find the right kernel module by interface name?
+		// Assume for now the interface name does not change
+		// Note that WiFiConfig.getDriver() below usually returns the "nl80211", not the
+		// the chipset kernel module (e.g. bcmdhd)
+		// s_logger.info("{} driver: '{}'", interfaceName, wifiConfig.getDriver());
+
+		if (KuraConstants.ReliaGATE_10_05.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+			SafeProcess proc = null;
+			BufferedReader br = null;
+			String cmd = "lsmod";
+			try {
+				s_logger.debug("Executing '{}'", cmd);
+				proc = ProcessUtil.exec(cmd);
+				int code = -1;
+				if ((code = proc.waitFor()) != 0) {
+					throw new KuraException(KuraErrorCode.INTERNAL_ERROR, "'"+cmd+"' exited with code: "+code);
+				}
+
+				//get the output
+				br = new BufferedReader(new InputStreamReader(proc.getInputStream()));
+				String line = null;
+				while ((line = br.readLine()) != null) {
+					if (line.contains("bcmdhd")) {
+						result = true;
+						break;
+					}
+				}
+			} catch (IOException e) {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e, "'"+cmd+"' failed");
+			} catch (InterruptedException e) {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e, "'"+cmd+"' interrupted");
+			} finally {
+				if (br != null) {
+					try {
+						br.close();
+					} catch (IOException e) {
+						s_logger.warn("Failed to close process input stream", e);
+					}
+				}
+				if (proc != null) {
+					proc.destroy();
+				}
+			}
+		}
+		return result;
+	}
+
+	public static void unloadKernelModule(String interfaceName) throws KuraException {
+		// FIXME: how to find the right kernel module by interface name?
+		// Assume for now the interface name does not change
+		if (KuraConstants.ReliaGATE_10_05.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+			SafeProcess proc = null;
+			try {
+				String cmd = "rmmod bcmdhd";
+				s_logger.debug("Executing '{}'", cmd);
+				proc = ProcessUtil.exec(cmd);
+				int code = -1;
+				if ((code = proc.waitFor()) != 0) {
+					throw new KuraException(KuraErrorCode.INTERNAL_ERROR, "'"+cmd+"' exited with code: "+code);
+				}
+			} catch (IOException e) {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e,"'rmmod bcmdhd' failed");
+			} catch (InterruptedException e) {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e,"'rmmod bcmdhd' interrupted");
+			} finally {
+				if (proc != null) {
+					proc.destroy();
+				}
+			}
+		} else {
+			s_logger.debug("Kernel module unload not needed by platform '{}'", TARGET_NAME);
+		}
+	}
+
+	public static void loadKernelModule(String interfaceName, WifiMode wifiMode) throws KuraException {
+		// FIXME: how to find the right kernel module by interface name?
+		// Assume for now the interface name does not change
+		if (KuraConstants.ReliaGATE_10_05.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+			SafeProcess proc = null;
+			String cmd = null;
+			if (wifiMode == WifiMode.MASTER) {
+				cmd = "modprobe -S 3.12.6 bcmdhd firmware_path=\"/system/etc/firmware/fw_bcm43438a0_apsta.bin\" op_mode=2";
+			} else if (wifiMode == WifiMode.INFRA || wifiMode == WifiMode.ADHOC) {
+				cmd = "modprobe -S 3.12.6 bcmdhd";
+			} else {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, "Don't know what to load for WifiMode " + wifiMode);
+			}
+
+			try {
+				s_logger.debug("Executing '{}'", cmd);
+				proc = ProcessUtil.exec(cmd);
+				int code = -1;
+				if ((code = proc.waitFor()) != 0) {
+					throw new KuraException(KuraErrorCode.INTERNAL_ERROR, "'"+cmd+"' exited with code: "+code);
+				}
+			} catch (IOException e) {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e, "'"+cmd+"' failed");
+			} catch (InterruptedException e) {
+				throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e, "'"+cmd+"' interrupted");
+			} finally {
+				if (proc != null) {
+					proc.destroy();
+				}
+			}
+		} else {
+			s_logger.debug("Kernel module load not needed by platform '{}'", TARGET_NAME);
+		}
+	}
+	
+	public static boolean isKernelModuleLoadedForMode(String interfaceName, WifiMode wifiMode) throws KuraException {
+		// FIXME: how to find the right kernel module by interface name?
+		// Assume for now the interface name does not change.
+		if (KuraConstants.ReliaGATE_10_05.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+	
+    public static boolean isWifiDeviceOn(String interfaceName) {
+    	boolean deviceOn = false;
+    	// FIXME Assume for now the interface name does not change
+		if (KuraConstants.Reliagate_10_20.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+    		File fDevice = new File("/sys/bus/pci/devices/0000:01:00.0");
+    		if (fDevice.exists()) {
+    			deviceOn = true;
+    		}
+    	}
+    	s_logger.debug("isWifiDeviceOn()? {}", deviceOn);
+    	return deviceOn;
+    }
+    
+    public static void turnWifiDeviceOn(String interfaceName) throws Exception {
+    	// FIXME Assume for now the interface name does not change
+		if (KuraConstants.Reliagate_10_20.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+    		s_logger.info("Turning Wifi device ON ...");
+    		FileWriter fw = new FileWriter("/sys/bus/pci/rescan");
+			fw.write("1");
+			fw.close();
+    	}
+    }
+    
+    public static void turnWifiDeviceOff(String interfaceName) throws Exception {
+    	// FIXME Assume for now the interface name does not change
+		if (KuraConstants.Reliagate_10_20.getTargetName().equals(TARGET_NAME) &&
+				"wlan0".equals(interfaceName)) {
+    		s_logger.info("Turning Wifi device OFF ...");
+			FileWriter fw = new FileWriter("/sys/bus/pci/devices/0000:01:00.0/remove");
+			fw.write("1");
+			fw.close();
+    	}
+    }
 }

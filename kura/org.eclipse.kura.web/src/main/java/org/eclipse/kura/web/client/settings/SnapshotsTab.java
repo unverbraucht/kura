@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.web.client.settings;
 
 import java.util.ArrayList;
@@ -22,8 +22,6 @@ import org.eclipse.kura.web.client.widget.FileUploadDialog;
 import org.eclipse.kura.web.shared.model.GwtSession;
 import org.eclipse.kura.web.shared.model.GwtSnapshot;
 import org.eclipse.kura.web.shared.model.GwtXSRFToken;
-import org.eclipse.kura.web.shared.service.GwtNetworkService;
-import org.eclipse.kura.web.shared.service.GwtNetworkServiceAsync;
 import org.eclipse.kura.web.shared.service.GwtSecurityTokenService;
 import org.eclipse.kura.web.shared.service.GwtSecurityTokenServiceAsync;
 import org.eclipse.kura.web.shared.service.GwtSnapshotService;
@@ -72,7 +70,6 @@ public class SnapshotsTab extends LayoutContainer {
 
 	private final GwtSecurityTokenServiceAsync gwtXSRFService = GWT.create(GwtSecurityTokenService.class);
 	private final GwtSnapshotServiceAsync gwtSnapshotService = GWT.create(GwtSnapshotService.class);
-	private final GwtNetworkServiceAsync gwtNetworkService = GWT.create(GwtNetworkService.class);
 
 	private final static String SERVLET_URL = "/" + GWT.getModuleName() + "/file/configuration/snapshot";
 
@@ -347,74 +344,28 @@ public class SnapshotsTab extends LayoutContainer {
 						m_grid.mask(MSGS.rollingBack());
 						m_toolBar.disable();
 						// do the rollback
-						if (snapshot.getSnapshotId() == 0L) {
-							if (gwtNetworkService != null) {
-								gwtXSRFService.generateSecurityToken(new AsyncCallback<GwtXSRFToken> () {
-									@Override
-									public void onFailure(Throwable ex) {
-										FailureHandler.handle(ex);
-									}
 
-									@Override
-									public void onSuccess(GwtXSRFToken token) {	
-										gwtNetworkService.rollbackDefaultConfiguration(token, new AsyncCallback<Void>() {                        										 	    
+						gwtXSRFService.generateSecurityToken(new AsyncCallback<GwtXSRFToken> () {
+							@Override
+							public void onFailure(Throwable ex) {
+								FailureHandler.handle(ex);
+							}
+
+							@Override
+							public void onSuccess(GwtXSRFToken token) {	
+								gwtSnapshotService.rollbackDeviceSnapshot(
+										token,
+										snapshot,  
+										new AsyncCallback<Void>() {                        										 	    
 											public void onFailure(Throwable caught) {
 												FailureHandler.handle(caught);
 												m_dirty = true;
 											}                        								    
 											public void onSuccess(Void arg0) {
-												gwtXSRFService.generateSecurityToken(new AsyncCallback<GwtXSRFToken> () {
-													@Override
-													public void onFailure(Throwable ex) {
-														FailureHandler.handle(ex);
-													}
-
-													@Override
-													public void onSuccess(GwtXSRFToken token) {	
-														gwtSnapshotService.rollbackDeviceSnapshot(token, 
-																snapshot,  
-																new AsyncCallback<Void>() {                        										 	    
-															public void onFailure(Throwable caught) {
-																FailureHandler.handle(caught);
-																m_dirty = true;
-															}                        								    
-															public void onSuccess(Void arg0) {
-																refresh();
-															}
-														});
-													}});
 												refresh();
 											}
 										});
-									}});
-
-							}
-						}else{
-
-
-							gwtXSRFService.generateSecurityToken(new AsyncCallback<GwtXSRFToken> () {
-								@Override
-								public void onFailure(Throwable ex) {
-									FailureHandler.handle(ex);
-								}
-
-								@Override
-								public void onSuccess(GwtXSRFToken token) {	
-									gwtSnapshotService.rollbackDeviceSnapshot(
-											token,
-											snapshot,  
-											new AsyncCallback<Void>() {                        										 	    
-												public void onFailure(Throwable caught) {
-													FailureHandler.handle(caught);
-													m_dirty = true;
-												}                        								    
-												public void onSuccess(Void arg0) {
-													refresh();
-												}
-											});
-								}});
-						}
-
+							}});
 					}
 				}
 			});

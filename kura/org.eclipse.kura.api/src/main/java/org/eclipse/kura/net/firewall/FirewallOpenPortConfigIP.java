@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.net.firewall;
 
 import org.eclipse.kura.net.IPAddress;
@@ -26,6 +26,9 @@ public abstract class FirewallOpenPortConfigIP<T extends IPAddress> implements F
 
 	/** The port to open for inbound connections **/
 	private int port;
+	
+	/** Range of ports to open for inbound connections **/
+	private String portRange;
 	
 	/** The type of protocol to allow for inbound connections **/
 	private NetProtocol protocol;
@@ -66,6 +69,19 @@ public abstract class FirewallOpenPortConfigIP<T extends IPAddress> implements F
 	public FirewallOpenPortConfigIP(int port, NetProtocol protocol, NetworkPair<T> permittedNetwork, String permittedInterfaceName, String unpermittedInterfaceName, String permittedMac, String sourcePortRange) { 	
 		super();
 		this.port = port;
+		this.portRange = null;
+		this.protocol = protocol;
+		this.permittedNetwork = permittedNetwork;
+		this.permittedInterfaceName = permittedInterfaceName;
+		this.unpermittedInterfaceName = unpermittedInterfaceName;
+		this.permittedMac = permittedMac;
+		this.sourcePortRange = sourcePortRange;
+	}
+	
+	public FirewallOpenPortConfigIP(String portRange, NetProtocol protocol, NetworkPair<T> permittedNetwork, String permittedInterfaceName, String unpermittedInterfaceName, String permittedMac, String sourcePortRange) { 	
+		super();
+		this.portRange = portRange;
+		this.port = -1;
 		this.protocol = protocol;
 		this.permittedNetwork = permittedNetwork;
 		this.permittedInterfaceName = permittedInterfaceName;
@@ -77,9 +93,17 @@ public abstract class FirewallOpenPortConfigIP<T extends IPAddress> implements F
 	public int getPort() {
 		return port;
 	}
-
+	
 	public void setPort(int port) {
 		this.port = port;
+	}
+	
+	public String getPortRange() {
+		return portRange;
+	}
+	
+	public void setPortRange(String portRange) {
+		this.portRange = portRange;
 	}
 
 	public NetProtocol getProtocol() {

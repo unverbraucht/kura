@@ -1,20 +1,23 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.net.admin.visitor.linux;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Properties;
+import java.util.Set;
 
 import org.eclipse.kura.KuraErrorCode;
 import org.eclipse.kura.KuraException;
@@ -33,8 +36,8 @@ import org.eclipse.kura.net.NetInterfaceConfig;
 import org.eclipse.kura.net.admin.modem.ModemPppConfigGenerator;
 import org.eclipse.kura.net.admin.modem.PppPeer;
 import org.eclipse.kura.net.admin.modem.SupportedSerialModemsFactoryInfo;
-import org.eclipse.kura.net.admin.modem.SupportedUsbModemsFactoryInfo;
 import org.eclipse.kura.net.admin.modem.SupportedSerialModemsFactoryInfo.SerialModemFactoryInfo;
+import org.eclipse.kura.net.admin.modem.SupportedUsbModemsFactoryInfo;
 import org.eclipse.kura.net.admin.modem.SupportedUsbModemsFactoryInfo.UsbModemFactoryInfo;
 import org.eclipse.kura.net.admin.util.LinuxFileUtil;
 import org.eclipse.kura.net.admin.visitor.linux.util.KuranetConfig;
@@ -68,7 +71,7 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         File peersDir = new File(OS_PEERS_DIRECTORY);
         if(!peersDir.exists()) {
             if(peersDir.mkdirs()) {
-                s_logger.debug("Created directory: " + OS_PEERS_DIRECTORY);
+                s_logger.debug("Created directory: {}", OS_PEERS_DIRECTORY);
             } else {
                 s_logger.warn("Could not create peers directory: " + OS_PEERS_DIRECTORY);
             }
@@ -77,7 +80,7 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
         File scriptsDir = new File(OS_SCRIPTS_DIRECTORY);
         if(!scriptsDir.exists()) {
             if(scriptsDir.mkdirs()) {
-                s_logger.debug("Created directory: " + OS_SCRIPTS_DIRECTORY);
+                s_logger.debug("Created directory: {}", OS_SCRIPTS_DIRECTORY);
             } else {
                 s_logger.warn("Could not create scripts directory: " + OS_SCRIPTS_DIRECTORY);
             }
@@ -86,17 +89,20 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
     
     @Override
     public void visit(NetworkConfiguration config) throws KuraException {
-    	
         List<NetInterfaceConfig<? extends NetInterfaceAddressConfig>> netInterfaceConfigs = config.getModifiedNetInterfaceConfigs();
+        boolean foundModemInterfaceConfigImpl = false;
         for(NetInterfaceConfig<? extends NetInterfaceAddressConfig> netInterfaceConfig : netInterfaceConfigs) {
             if(netInterfaceConfig instanceof ModemInterfaceConfigImpl) {
+            	foundModemInterfaceConfigImpl = true;
                 writeConfig((ModemInterfaceConfigImpl)netInterfaceConfig);
             }
+        }
+        if (!foundModemInterfaceConfigImpl) {
+        	removeKuraExtendedCellularConfig();
         }
     }
     
     private void writeConfig(ModemInterfaceConfigImpl modemInterfaceConfig) throws KuraException {
-    	
         String oldInterfaceName = modemInterfaceConfig.getName();
         String newInterfaceName = modemInterfaceConfig.getName();
         
@@ -123,7 +129,7 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
                 modemInterfaceConfig.setName(newInterfaceName);
             }
         }
-
+        
         // Save the status and priority
         IfcfgConfigWriter.writeKuraExtendedConfig(modemInterfaceConfig);
         
@@ -160,22 +166,22 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
 		if (!oldInterfaceName.equals(newInterfaceName)) {
 			try {
 				// Remove the old ppp peers symlink
-				s_logger.debug("Removing old symlinks to " + pppPeerFilename);
+				s_logger.debug("Removing old symlinks to {}", pppPeerFilename);
 				removeSymbolicLinks(pppPeerFilename, OS_PEERS_DIRECTORY);
 				
 				// Remove the old modem identifier
 				StringBuilder key = new StringBuilder("net.interface.").append(oldInterfaceName).append(".modem.identifier");
-				s_logger.debug("Removing modem identifier for " + oldInterfaceName);
+				s_logger.debug("Removing modem identifier for {}", oldInterfaceName);
 				KuranetConfig.deleteProperty(key.toString());
 				
 				// Remove custom dns servers
 				key = new StringBuilder("net.interface.").append(oldInterfaceName).append(".config.dnsServers");
-				s_logger.debug("Removing dns servers for " + oldInterfaceName);
+				s_logger.debug("Removing dns servers for {}", oldInterfaceName);
 				KuranetConfig.deleteProperty(key.toString());
 				
 				// Remove gpsEnabled 
 				key = new StringBuilder().append("net.interface.").append(oldInterfaceName).append(".config.gpsEnabled");
-				s_logger.debug("Removing gpsEnabled for " + oldInterfaceName);
+				s_logger.debug("Removing gpsEnabled for {}", oldInterfaceName);
 				KuranetConfig.deleteProperty(key.toString());
 				
 				// Remove status
@@ -193,21 +199,21 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
 				if (modemConfig != null) {
 					s_logger.debug("Writing connect scripts for " + modemInterfaceConfig.getName() + " using " + configClass.toString());
 
-					s_logger.debug("Writing " + pppPeerFilename);
+					s_logger.debug("Writing {}", pppPeerFilename);
 					PppPeer pppPeer = scriptGenerator.getPppPeer(getDeviceId(usbDevice), modemConfig,pppLogfile, chatFilename, disconnectFilename);
 					pppPeer.setBaudRate(baudRate);
 					pppPeer.write(pppPeerFilename);
 
-					s_logger.debug("Writing " + chatFilename);
+					s_logger.debug("Writing {}", chatFilename);
 					ModemXchangeScript connectScript = scriptGenerator.getConnectScript(modemConfig);
 					connectScript.writeScript(chatFilename);
 
-					s_logger.debug("Writing " + disconnectFilename);
+					s_logger.debug("Writing {}", disconnectFilename);
 					ModemXchangeScript disconnectScript = scriptGenerator.getDisconnectScript(modemConfig);
 					disconnectScript.writeScript(disconnectFilename);
 
 					if (pppNum >= 0) {
-						s_logger.debug("Linking peer file using ppp number: " + pppNum);
+						s_logger.debug("Linking peer file using ppp number: {}", pppNum);
 						String symlinkFilename = formPeerLinkAbsoluteName(pppNum);
 						LinuxFileUtil.createSymbolicLink(pppPeerFilename, symlinkFilename);
 					} else {
@@ -243,11 +249,11 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
 					}
 					
 					StringBuilder key = new StringBuilder().append("net.interface.").append(newInterfaceName).append(".config.gpsEnabled");
-					s_logger.debug("Setting gpsEnabled for " + newInterfaceName);
+					s_logger.debug("Setting gpsEnabled for {}", newInterfaceName);
 					KuranetConfig.setProperty(key.toString(), Boolean.toString(modemConfig.isGpsEnabled()));
 					
 					key = new StringBuilder().append("net.interface.").append(newInterfaceName).append(".config.resetTimeout");
-					s_logger.debug("Setting modem resetTimeout for " + newInterfaceName);
+					s_logger.debug("Setting modem resetTimeout for {}", newInterfaceName);
 					KuranetConfig.setProperty(key.toString(), Integer.toString(modemConfig.getResetTimeout()));
 				} else {
 					s_logger.error("Error writing connect scripts - modemConfig is null");
@@ -354,10 +360,34 @@ public class PppConfigWriter implements NetworkConfigurationVisitor {
                 }
                 
                 if(file.getCanonicalPath().equals(targetFile.getAbsolutePath())) {
-                    s_logger.debug("Deleting " + file.getAbsolutePath());
+                    s_logger.debug("Deleting {}", file.getAbsolutePath());
                     file.delete();
                 }
             }
         }
+    }
+    
+    private void removeKuraExtendedCellularConfig() throws KuraException {
+    	Properties props = KuranetConfig.getProperties();
+    	if (!props.isEmpty()) {
+    		List<String> keysToRemove = new ArrayList<String>(); 
+	    	Set<Object> keys = props.keySet();
+	    	for (Object obj : keys) {
+	    		String key = (String)obj;
+	    		if (key.startsWith("net.interface.ppp")) {
+	    			keysToRemove.add(key);
+	    		}
+	    	}
+	    	if (!keysToRemove.isEmpty()) {
+		    	for (String key : keysToRemove) {
+		    		props.remove(key);
+		    	}
+		    	try {
+		    		KuranetConfig.storeProperties(props);
+		    	} catch (Exception e) {
+		    		throw new KuraException(KuraErrorCode.INTERNAL_ERROR, e);
+		    	}
+	    	}
+    	}
     }
 }

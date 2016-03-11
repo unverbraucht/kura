@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.net.admin.modem.sierra;
 
 import java.util.ArrayList;
@@ -31,9 +31,6 @@ import java.util.List;
  * <p>
  * The maximum length of a CnS message is 255 bytes. The minimum length is 10.
  * <p>
- * 
- *
- * Copyright (c) 2009 Eurotech Inc. All rights reserved.
  *
  */
 public class CnS {
@@ -70,22 +67,23 @@ public class CnS {
 		List<Byte> alMsg = new ArrayList<Byte> ();
 		
 		// form "Object ID" field
-		alMsg.add (new Byte ((byte)((objectID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte) (objectID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((objectID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((objectID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte) (objectID & 0xff)));
 		
 		// form "Operation Type" field
-		alMsg.add (new Byte (opType));
-		alMsg.add (new Byte ((byte)0x00)); // reserved 
+		alMsg.add (Byte.valueOf (opType));
+		alMsg.add (Byte.valueOf ((byte)0x00)); // reserved 
 		
 		// form "Application ID" field 
-		alMsg.add (new Byte ((byte)((appID >> 24) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 16) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte)(appID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 24) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 16) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)(appID & 0xff)));
 		
 		// form "Payload Length" field
-		alMsg.add (new Byte ((byte)0x00));
-		alMsg.add (new Byte ((byte)0x00));
+		alMsg.add (Byte.valueOf ((byte)0x00));
+		alMsg.add (Byte.valueOf ((byte)0x00));
 		
 		// form CnS request array
 		this.request = new byte [alMsg.size()];
@@ -110,26 +108,26 @@ public class CnS {
 		List<Byte> alMsg = new ArrayList<Byte>();
 		
 		// form "Object ID" field
-		alMsg.add (new Byte ((byte)((objectID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte) (objectID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((objectID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte) (objectID & 0xff)));
 		
 		// form "Operation Type" field
-		alMsg.add (new Byte (opType));
-		alMsg.add (new Byte ((byte)0x00)); // reserved 
+		alMsg.add (Byte.valueOf (opType));
+		alMsg.add (Byte.valueOf ((byte)0x00)); // reserved 
 		
 		// form "Application ID" field 
-		alMsg.add (new Byte ((byte)((appID >> 24) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 16) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte)(appID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 24) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 16) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)(appID & 0xff)));
 		
 		// form "Payload Length" field
 		int ploadlen = pload.length;
-		alMsg.add (new Byte ((byte)((ploadlen >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte) (ploadlen & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((ploadlen >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte) (ploadlen & 0xff)));
 		
 		for (int i = 0; i < ploadlen; i++) {
-			alMsg.add (new Byte (pload[i]));
+			alMsg.add (Byte.valueOf (pload[i]));
 		}
 		
 		// form CnS request array
@@ -154,25 +152,25 @@ public class CnS {
 		List<Byte> alMsg = new ArrayList<Byte> ();
 		
 		// form "Object ID" field
-		alMsg.add (new Byte ((byte)((objectID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte) (objectID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((objectID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte) (objectID & 0xff)));
 		
 		// form "Operation Type" field
-		alMsg.add (new Byte (opType));
-		alMsg.add (new Byte ((byte)0x00)); // reserved 
+		alMsg.add (Byte.valueOf (opType));
+		alMsg.add (Byte.valueOf ((byte)0x00)); // reserved 
 		
 		// form "Application ID" field 
-		alMsg.add (new Byte ((byte)((appID >> 24) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 16) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte)(appID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 24) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 16) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)(appID & 0xff)));
 		
 		// form "Payload Length" field
-		alMsg.add (new Byte ((byte)0x00));
-		alMsg.add (new Byte ((byte)0x02));
+		alMsg.add (Byte.valueOf ((byte)0x00));
+		alMsg.add (Byte.valueOf ((byte)0x02));
 		
-		alMsg.add (new Byte ((byte)((param >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte)(param & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((param >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)(param & 0xff)));
 		
 		// form CnS request array
 		this.request = new byte [alMsg.size()];
@@ -197,27 +195,27 @@ public class CnS {
 		List<Byte> alMsg = new ArrayList<Byte> ();
 		
 		// form "Object ID" field
-		alMsg.add (new Byte ((byte)((objectID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte) (objectID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((objectID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte) (objectID & 0xff)));
 		
 		// form "Operation Type" field
-		alMsg.add (new Byte (opType));
-		alMsg.add (new Byte ((byte)0x00)); // reserved 
+		alMsg.add (Byte.valueOf (opType));
+		alMsg.add (Byte.valueOf ((byte)0x00)); // reserved 
 		
 		// form "Application ID" field 
-		alMsg.add (new Byte ((byte)((appID >> 24) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 16) & 0xff)));
-		alMsg.add (new Byte ((byte)((appID >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte)(appID & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 24) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 16) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((appID >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)(appID & 0xff)));
 		
 		// form "Payload Length" field
-		alMsg.add (new Byte ((byte)0x00));
-		alMsg.add (new Byte ((byte)0x04));
+		alMsg.add (Byte.valueOf ((byte)0x00));
+		alMsg.add (Byte.valueOf ((byte)0x04));
 		
-		alMsg.add (new Byte ((byte)((param >> 24) & 0xff)));
-		alMsg.add (new Byte ((byte)((param >> 16) & 0xff)));
-		alMsg.add (new Byte ((byte)((param >> 8) & 0xff)));
-		alMsg.add (new Byte ((byte)(param & 0x0ff)));
+		alMsg.add (Byte.valueOf ((byte)((param >> 24) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((param >> 16) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)((param >> 8) & 0xff)));
+		alMsg.add (Byte.valueOf ((byte)(param & 0x0ff)));
 		
 		// form CnS request array
 		this.request = new byte [alMsg.size()];

@@ -1,14 +1,14 @@
-/**
- * Copyright (c) 2011, 2014 Eurotech and/or its affiliates
+/*******************************************************************************
+ * Copyright (c) 2011, 2016 Eurotech and/or its affiliates
  *
- *  All rights reserved. This program and the accompanying materials
- *  are made available under the terms of the Eclipse Public License v1.0
- *  which accompanies this distribution, and is available at
- *  http://www.eclipse.org/legal/epl-v10.html
+ * All rights reserved. This program and the accompanying materials
+ * are made available under the terms of the Eclipse Public License v1.0
+ * which accompanies this distribution, and is available at
+ * http://www.eclipse.org/legal/epl-v10.html
  *
  * Contributors:
- *   Eurotech
- */
+ *     Eurotech
+ *******************************************************************************/
 package org.eclipse.kura.linux.net;
 
 import java.io.File;
@@ -66,7 +66,7 @@ public class ConnectionInfoImpl implements ConnectionInfo
 				try{
 					fis.close();
 				}catch(IOException ex){
-					s_logger.error("I/O Exception while closing FileInputStream!");
+					s_logger.error("I/O Exception while closing FileInputStream!", ex);
 				}
 			}
 		}
@@ -80,7 +80,7 @@ public class ConnectionInfoImpl implements ConnectionInfo
 			try {
 				ipAddress = (IP4Address) IPAddress.parseHostAddress(sIpAddress);
 			} catch (Exception e) {
-				e.printStackTrace();
+				s_logger.error("Error parsing IP address!", e);
 			}
 		}
 		
@@ -100,7 +100,7 @@ public class ConnectionInfoImpl implements ConnectionInfo
 			try {
 				gateway = (IP4Address) IPAddress.parseHostAddress(sGateway);
 			} catch (Exception e) {
-				e.printStackTrace();
+				s_logger.error("Error parsing gateway address!", e);
 			}
 		}
 		
@@ -123,7 +123,7 @@ public class ConnectionInfoImpl implements ConnectionInfo
 					IP4Address dns = (IP4Address) IPAddress.parseHostAddress(sDns);
 					lDnsServers.add(dns);
 				} catch (Exception e) {
-					e.printStackTrace();
+					s_logger.error("Error parsing DNS addresses!", e);
 				}
 			}
 		}
@@ -136,11 +136,12 @@ public class ConnectionInfoImpl implements ConnectionInfo
 	 * 
 	 * @return		The interface name associated with this connection information
 	 */
+	@Override
 	public String getIfaceName() {
 		return m_ifaceName;
 	}
 
-	private String formConinfoFileName (String ifaceName) {
+	private static String formConinfoFileName (String ifaceName) {
 		StringBuffer sb = new StringBuffer();
 		sb.append("/tmp/.kura/coninfo-");
 		sb.append(ifaceName);
