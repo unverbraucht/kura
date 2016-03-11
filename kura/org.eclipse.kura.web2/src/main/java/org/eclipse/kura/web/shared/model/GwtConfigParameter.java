@@ -15,7 +15,7 @@ import java.util.Map;
 
 import com.google.gwt.user.client.rpc.IsSerializable;
 
-public class GwtConfigParameter implements IsSerializable {
+public class GwtConfigParameter implements IsSerializable{
 
 	public enum GwtConfigParameterType {		
 	    STRING,
